@@ -1,0 +1,233 @@
+{
+  "orders": [],
+  "machines": {
+    "Nala": [
+      {
+        "id": "nala-w1",
+        "code": "W-01",
+        "type": "Washing Machine",
+        "capacity": "10kg",
+        "status": "Available",
+        "currentOrderId": null,
+        "timeRemainingMinutes": null
+      },
+      {
+        "id": "nala-w2",
+        "code": "W-02",
+        "type": "Washing Machine",
+        "capacity": "10kg",
+        "status": "Available",
+        "currentOrderId": null,
+        "timeRemainingMinutes": null
+      },
+      {
+        "id": "nala-w3",
+        "code": "W-03",
+        "type": "Washing Machine",
+        "capacity": "12kg",
+        "status": "Available",
+        "currentOrderId": null,
+        "timeRemainingMinutes": null
+      },
+      {
+        "id": "nala-w4",
+        "code": "W-04",
+        "type": "Washing Machine",
+        "capacity": "15kg",
+        "status": "Available",
+        "currentOrderId": null,
+        "timeRemainingMinutes": null
+      }
+    ],
+    "The Encore": [
+      {
+        "id": "enc-w1",
+        "code": "W-01",
+        "type": "Washing Machine",
+        "capacity": "10kg",
+        "status": "Available",
+        "currentOrderId": null,
+        "timeRemainingMinutes": null
+      },
+      {
+        "id": "enc-w2",
+        "code": "W-02",
+        "type": "Washing Machine",
+        "capacity": "10kg",
+        "status": "Available",
+        "currentOrderId": null,
+        "timeRemainingMinutes": null
+      },
+      {
+        "id": "enc-w3",
+        "code": "W-03",
+        "type": "Washing Machine",
+        "capacity": "12kg",
+        "status": "Available",
+        "currentOrderId": null,
+        "timeRemainingMinutes": null
+      },
+      {
+        "id": "enc-w4",
+        "code": "W-04",
+        "type": "Washing Machine",
+        "capacity": "15kg",
+        "status": "Available",
+        "currentOrderId": null,
+        "timeRemainingMinutes": null
+      }
+    ],
+    "Centurion": [
+      {
+        "id": "cen-w1",
+        "code": "W-01",
+        "type": "Washing Machine",
+        "capacity": "10kg",
+        "status": "Available",
+        "currentOrderId": null,
+        "timeRemainingMinutes": null
+      },
+      {
+        "id": "cen-w2",
+        "code": "W-02",
+        "type": "Washing Machine",
+        "capacity": "10kg",
+        "status": "Available",
+        "currentOrderId": null,
+        "timeRemainingMinutes": null
+      },
+      {
+        "id": "cen-w3",
+        "code": "W-03",
+        "type": "Washing Machine",
+        "capacity": "12kg",
+        "status": "Available",
+        "currentOrderId": null,
+        "timeRemainingMinutes": null
+      },
+      {
+        "id": "cen-w4",
+        "code": "W-04",
+        "type": "Washing Machine",
+        "capacity": "15kg",
+        "status": "Available",
+        "currentOrderId": null,
+        "timeRemainingMinutes": null
+      }
+    ],
+    "Georgia": [
+      {
+        "id": "geo-w1",
+        "code": "W-01",
+        "type": "Washing Machine",
+        "capacity": "10kg",
+        "status": "Available",
+        "currentOrderId": null,
+        "timeRemainingMinutes": null
+      },
+      {
+        "id": "geo-w2",
+        "code": "W-02",
+        "type": "Washing Machine",
+        "capacity": "10kg",
+        "status": "Available",
+        "currentOrderId": null,
+        "timeRemainingMinutes": null
+      },
+      {
+        "id": "geo-w3",
+        "code": "W-03",
+        "type": "Washing Machine",
+        "capacity": "12kg",
+        "status": "Available",
+        "currentOrderId": null,
+        "timeRemainingMinutes": null
+      },
+      {
+        "id": "geo-w4",
+        "code": "W-04",
+        "type": "Washing Machine",
+        "capacity": "15kg",
+        "status": "Available",
+        "currentOrderId": null,
+        "timeRemainingMinutes": null
+      }
+    ],
+    "Absa Towers": [
+      {
+        "id": "absa-w1",
+        "code": "W-01",
+        "type": "Washing Machine",
+        "capacity": "10kg",
+        "status": "Available",
+        "currentOrderId": null,
+        "timeRemainingMinutes": null
+      },
+      {
+        "id": "absa-w2",
+        "code": "W-02",
+        "type": "Washing Machine",
+        "capacity": "10kg",
+        "status": "Available",
+        "currentOrderId": null,
+        "timeRemainingMinutes": null
+      },
+      {
+        "id": "absa-w3",
+        "code": "W-03",
+        "type": "Washing Machine",
+        "capacity": "12kg",
+        "status": "Available",
+        "currentOrderId": null,
+        "timeRemainingMinutes": null
+      },
+      {
+        "id": "absa-w4",
+        "code": "W-04",
+        "type": "Washing Machine",
+        "capacity": "15kg",
+        "status": "Available",
+        "currentOrderId": null,
+        "timeRemainingMinutes": null
+      }
+    ],
+    "Zuri": [
+      {
+        "id": "zuri-w1",
+        "code": "W-01",
+        "type": "Washing Machine",
+        "capacity": "10kg",
+        "status": "Available",
+        "currentOrderId": null,
+        "timeRemainingMinutes": null
+      },
+      {
+        "id": "zuri-w2",
+        "code": "W-02",
+        "type": "Washing Machine",
+        "capacity": "10kg",
+        "status": "Available",
+        "currentOrderId": null,
+        "timeRemainingMinutes": null
+      },
+      {
+        "id": "zuri-w3",
+        "code": "W-03",
+        "type": "Washing Machine",
+        "capacity": "12kg",
+        "status": "Available",
+        "currentOrderId": null,
+        "timeRemainingMinutes": null
+      },
+      {
+        "id": "zuri-w4",
+        "code": "W-04",
+        "type": "Washing Machine",
+        "capacity": "15kg",
+        "status": "Available",
+        "currentOrderId": null,
+        "timeRemainingMinutes": null
+      }
+    ]
+  }
+}

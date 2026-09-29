@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>LaundryLab - Infrastructure & Running Cost Proposal</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+        @page {
+            size: A4 portrait;
+            margin: 14mm 14mm;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            color: #1e293b;
+            line-height: 1.5;
+            background: #fff;
+            font-size: 9.5pt;
+        }
+
+        /* Cover Page */
+        .cover-page {
+            min-height: 94vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            page-break-after: always;
+            padding: 40px 36px;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #fff;
+            border-radius: 12px;
+        }
+
+        .cover-brand {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo-box {
+            width: 52px;
+            height: 52px;
+            background: linear-gradient(135deg, #2563eb, #06b6d4);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: #fff;
+            font-weight: 800;
+        }
+
+        .brand-title {
+            font-size: 24pt;
+            font-weight: 900;
+            letter-spacing: 0.5px;
+            color: #ffffff;
+        }
+
+        .brand-sub {
+            font-size: 10pt;
+            color: #38bdf8;
+            font-weight: 600;
+        }
+
+        .cover-title-container {
+            margin: 40px 0;
+        }
+
+        .doc-category {
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-size: 9pt;
+            font-weight: 700;
+            color: #38bdf8;
+            margin-bottom: 12px;
+        }
+
+        .cover-main-title {
+            font-size: 26pt;
+            font-weight: 800;
+            line-height: 1.25;
+            margin-bottom: 16px;
+            color: #ffffff;
+        }
+
+        .cover-subtitle {
+            font-size: 11pt;
+            color: #94a3b8;
+            max-width: 650px;
+            line-height: 1.6;
+        }
+
+        .meta-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .meta-item label {
+            font-size: 8pt;
+            text-transform: uppercase;
+            color: #94a3b8;
+            font-weight: 700;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .meta-item span {
+            font-size: 10.5pt;
+            font-weight: 700;
+            color: #ffffff;
+        }
+
+        /* Content Pages */
+        .page {
+            padding: 10px 0;
+            page-break-after: always;
+        }
+        
+        .page:last-child {
+            page-break-after: avoid;
+        }
+
+        .section-header {
+            border-bottom: 2px solid #2563eb;
+            padding-bottom: 6px;
+            margin: 20px 0 14px 0;
+            color: #0f172a;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-header h2 {
+            font-size: 13.5pt;
+            font-weight: 800;
+        }
+
+        .section-number {
+            background: #2563eb;
+            color: #fff;
+            width: 24px;
+            height: 24px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 9pt;
+            font-weight: 800;
+        }
+
+        p {
+            margin-bottom: 12px;
+            color: #334155;
+            line-height: 1.6;
+        }
+
+        /* Grid Cards */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+            margin-bottom: 16px;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .card {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 14px;
+        }
+
+        .card-accent {
+            border-left: 4px solid #2563eb;
+        }
+
+        .card-success {
+            border-left: 4px solid #10b981;
+            background: #f0fdf4;
+        }
+
+        .card-title {
+            font-weight: 800;
+            font-size: 10.5pt;
+            color: #0f172a;
+            margin-bottom: 6px;
+        }
+
+        .card-price {
+            font-size: 16pt;
+            font-weight: 900;
+            color: #2563eb;
+            margin: 4px 0 8px 0;
+        }
+
+        .card-price-green {
+            color: #059669;
+        }
+
+        /* Tables */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 14px 0;
+            font-size: 9pt;
+        }
+
+        th {
+            background: #0f172a;
+            color: #ffffff;
+            text-align: left;
+            padding: 10px 12px;
+            font-weight: 700;
+        }
+
+        td {
+            padding: 9px 12px;
+            border-bottom: 1px solid #e2e8f0;
+            color: #334155;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f8fafc;
+        }
+
+        .total-row td {
+            font-weight: 800;
+            background: #eff6ff;
+            color: #1e3a8a;
+            border-top: 2px solid #2563eb;
+            font-size: 9.5pt;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 7.5pt;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .badge-green {
+            background: #dcfce7;
+            color: #15803d;
+        }
+
+        .badge-blue {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+
+        /* Callout Box */
+        .callout {
+            padding: 14px 16px;
+            border-radius: 8px;
+            margin: 14px 0;
+            font-size: 9pt;
+            line-height: 1.5;
+        }
+
+        .callout-info {
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            color: #1e40af;
+        }
+
+        .callout-tip {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            color: #166534;
+        }
+
+        .callout-title {
+            font-weight: 800;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        ul {
+            margin-left: 20px;
+            margin-bottom: 12px;
+            color: #334155;
+        }
+
+        li {
+            margin-bottom: 4px;
+        }
+
+        .footer {
+            margin-top: 20px;
+            padding-top: 10px;
+            border-top: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            font-size: 8pt;
+            color: #94a3b8;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- COVER PAGE -->
+    <div class="cover-page">
+        <div class="cover-brand">
+            <div class="logo-box">LL</div>
+            <div>
+                <div class="brand-title">LAUNDRYLAB</div>
+                <div class="brand-sub">Multi-Branch Digital Management Platform</div>
+            </div>
+        </div>
+
+        <div class="cover-title-container">
+            <div class="doc-category">Technical Infrastructure & Operational Financial Analysis</div>
+            <div class="cover-main-title">Application Running Costs Proposal</div>
+            <div class="cover-subtitle">
+                A comprehensive operational cost breakdown for hosting and managing the LaundryLab platform across 6 laundromat branches (24 machines) and 500+ active customers.
+            </div>
+        </div>
+
+        <div class="meta-grid">
+            <div class="meta-item">
+                <label>Target Scope</label>
+                <span>6 Laundromat Branches</span>
+            </div>
+            <div class="meta-item">
+                <label>Prepared For</label>
+                <span>Mpho Raymond Popela</span>
+            </div>
+            <div class="meta-item">
+                <label>Date</label>
+                <span>August 2026</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- PAGE 1: EXECUTIVE SUMMARY & COST BREAKDOWN -->
+    <div class="page">
+        <div class="section-header">
+            <div class="section-number">1</div>
+            <h2>Executive Summary & Operational Scale</h2>
+        </div>
+
+        <p>
+            The <strong>LaundryLab</strong> application is a custom multi-branch digital management system designed to streamline daily laundry operations, track washing machine jobs (4 machines per location across 6 branches), manage customer orders, and send automated order status updates.
+        </p>
+
+        <div class="grid-3" style="margin-bottom: 20px;">
+            <div class="card card-accent">
+                <div class="card-title">Operating Scale</div>
+                <p><strong>6 Locations:</strong> Absa Towers, Zuri, Nala, The Encore, Georgia, Centurion</p>
+                <p><strong>24 Machines Total</strong></p>
+            </div>
+            <div class="card card-accent">
+                <div class="card-title">Customer Base</div>
+                <p><strong>50+ Active Customers</strong> per branch (~300 - 500 total active clients)</p>
+                <p><strong>~30–100 daily orders</strong> combined</p>
+            </div>
+            <div class="card card-accent">
+                <div class="card-title">Resource Footprint</div>
+                <p><strong>Light Compute:</strong> &lt;100k API requests/month</p>
+                <p><strong>Light Data:</strong> &lt;500 MB DB size over 1–2 years</p>
+            </div>
+        </div>
+
+        <div class="section-header">
+            <div class="section-number">2</div>
+            <h2>Detailed Cost Options Breakdown (ZAR)</h2>
+        </div>
+
+        <p>
+            Below are the two primary deployment models for the LaundryLab platform. All figures are given in <strong>South African Rand (ZAR)</strong>.
+        </p>
+
+        <!-- OPTION 1 CARD -->
+        <div class="card card-success" style="margin-bottom: 14px;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="card-title" style="font-size: 12pt; color: #065f46;">OPTION 1: Budget-Optimized Free Cloud Stack (RECOMMENDED)</div>
+                    <p style="margin: 0; color: #047857;">Utilizes cloud provider free tiers combined with a business-hours keep-alive ping to eliminate cold starts.</p>
+                </div>
+                <div class="card-price card-price-green" style="margin: 0;">R89.00 / Year</div>
+            </div>
+        </div>
+
+        <table style="margin-bottom: 20px;">
+            <thead>
+                <tr>
+                    <th>Component</th>
+                    <th>Service Provider</th>
+                    <th>Plan Tier</th>
+                    <th>Monthly (ZAR)</th>
+                    <th>Annual (ZAR)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Frontend Hosting</strong></td>
+                    <td>Vercel / Cloudflare Pages</td>
+                    <td>Hobby / Free Tier</td>
+                    <td><span class="badge badge-green">R0.00</span></td>
+                    <td>R0.00</td>
+                </tr>
+                <tr>
+                    <td><strong>Backend API</strong></td>
+                    <td>Render.com / Koyeb (Python)</td>
+                    <td>Free Web Service + Keep-Alive Ping</td>
+                    <td><span class="badge badge-green">R0.00</span></td>
+                    <td>R0.00</td>
+                </tr>
+                <tr>
+                    <td><strong>Database Engine</strong></td>
+                    <td>Supabase / Neon PostgreSQL</td>
+                    <td>Free Tier (500 MB DB space)</td>
+                    <td><span class="badge badge-green">R0.00</span></td>
+                    <td>R0.00</td>
+                </tr>
+                <tr>
+                    <td><strong>Customer WhatsApp Alerts</strong></td>
+                    <td>WhatsApp Integration</td>
+                    <td>Direct `wa.me` links / Free Meta Tier</td>
+                    <td><span class="badge badge-green">R0.00</span></td>
+                    <td>R0.00</td>
+                </tr>
+                <tr>
+                    <td><strong>Custom Domain Name</strong></td>
+                    <td>xneelo / Domains.co.za</td>
+                    <td>`.co.za` Registration & Renewal</td>
+                    <td>~R7.42 / mo</td>
+                    <td>R89.00 / yr</td>
+                </tr>
+                <tr class="total-row">
+                    <td colspan="3"><strong>TOTAL RUNNING COST (OPTION 1)</strong></td>
+                    <td><strong>~R7.42 / mo</strong></td>
+                    <td><strong>R89.00 / year</strong></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- OPTION 2 CARD -->
+        <div class="card card-accent" style="margin-bottom: 14px;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="card-title" style="font-size: 12pt; color: #1e3a8a;">OPTION 2: Dedicated Managed 24/7 Cloud Stack</div>
+                    <p style="margin: 0; color: #1d4ed8;">Always-on dedicated cloud server with guaranteed 24/7 uptime without keep-alive pings.</p>
+                </div>
+                <div class="card-price" style="margin: 0;">~R135.00 / Month</div>
+            </div>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Component</th>
+                    <th>Service Provider</th>
+                    <th>Plan Tier</th>
+                    <th>Monthly (ZAR)</th>
+                    <th>Annual (ZAR)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Frontend Hosting</strong></td>
+                    <td>Vercel / Cloudflare Pages</td>
+                    <td>Hobby / Free Tier</td>
+                    <td><span class="badge badge-green">R0.00</span></td>
+                    <td>R0.00</td>
+                </tr>
+                <tr>
+                    <td><strong>Backend API</strong></td>
+                    <td>Render / Railway (Python)</td>
+                    <td>Starter Dedicated Compute ($7/mo)</td>
+                    <td>~R125.00 / mo</td>
+                    <td>R1,500.00 / yr</td>
+                </tr>
+                <tr>
+                    <td><strong>Database Engine</strong></td>
+                    <td>Supabase PostgreSQL</td>
+                    <td>Free / Managed Tier</td>
+                    <td><span class="badge badge-green">R0.00</span></td>
+                    <td>R0.00</td>
+                </tr>
+                <tr>
+                    <td><strong>Customer WhatsApp Alerts</strong></td>
+                    <td>WhatsApp Integration</td>
+                    <td>Direct `wa.me` links / Free Meta Tier</td>
+                    <td><span class="badge badge-green">R0.00</span></td>
+                    <td>R0.00</td>
+                </tr>
+                <tr>
+                    <td><strong>Custom Domain Name</strong></td>
+                    <td>xneelo / Domains.co.za</td>
+                    <td>`.co.za` Registration & Renewal</td>
+                    <td>~R7.42 / mo</td>
+                    <td>R89.00 / yr</td>
+                </tr>
+                <tr class="total-row">
+                    <td colspan="3"><strong>TOTAL RUNNING COST (OPTION 2)</strong></td>
+                    <td><strong>~R132.42 / mo</strong></td>
+                    <td><strong>R1,589.00 / year</strong></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="footer">
+            <span>LaundryLab Proposal &bull; Prepared for Mpho Raymond Popela</span>
+            <span>Page 1 of 2</span>
+        </div>
+    </div>
+
+    <!-- PAGE 2: COLD START SOLUTION & WHATSAPP STRATEGY -->
+    <div class="page">
+        <div class="section-header">
+            <div class="section-number">3</div>
+            <h2>Cold Start Management & Mitigation Strategy</h2>
+        </div>
+
+        <div class="callout callout-info">
+            <div class="callout-title">Understanding Cloud "Cold Starts"</div>
+            <p style="margin: 0;">
+                On free cloud hosting tiers (such as Render Free Tier), if no staff member touches the application for 15 minutes, the cloud provider puts the backend process to sleep to save energy. The next request takes <strong>30 to 45 seconds</strong> to wake up the server.
+            </p>
+        </div>
+
+        <p><strong>How Option 1 Completely Eliminates Cold Starts (R0 Cost Solution):</strong></p>
+        
+        <div class="card card-success" style="margin-bottom: 14px;">
+            <div class="card-title" style="color: #065f46;">Automated Business-Hours Keep-Alive Ping</div>
+            <p>
+                We integrate a free automated ping service (e.g., <em>cron-job.org</em> or <em>UptimeRobot</em>) configured to send a lightweight background health check ping (<code>GET /api/health</code>) to the backend every <strong>10 minutes</strong> between <strong>06:00 AM and 08:00 PM</strong> daily.
+            </p>
+            <ul>
+                <li><strong>Result:</strong> Render sees activity every 10 minutes, keeping the server <strong>100% awake</strong> throughout operational hours.</li>
+                <li><strong>User Experience:</strong> Instant load times for staff and customers at all 6 laundromat branches.</li>
+                <li><strong>Cost:</strong> <strong>R0 / month</strong>.</li>
+            </ul>
+        </div>
+
+        <div class="section-header">
+            <div class="section-number">4</div>
+            <h2>WhatsApp Messaging Strategy & Zero Cost Breakdown</h2>
+        </div>
+
+        <p>
+            To notify customers when their laundry is ready for pickup without incurring SMS costs (which average ~35c per SMS), we implement WhatsApp messaging:
+        </p>
+
+        <div class="grid-2">
+            <div class="card card-accent">
+                <div class="card-title">Staff One-Click WhatsApp Link (R0)</div>
+                <p>
+                    When an order status is marked as <em>"Completed / Ready for Pickup"</em>, the staff member clicks a <strong>"Notify via WhatsApp"</strong> button on the POS screen.
+                </p>
+                <p style="margin: 0;">
+                    This instantly opens WhatsApp Web or the WhatsApp app on the staff phone/tablet with a pre-populated message: <br/>
+                    <em>"Hi [Customer Name], your laundry order #[ID] is ready for pickup at [Branch Name]!"</em>
+                </p>
+            </div>
+            <div class="card card-accent">
+                <div class="card-title">Meta WhatsApp API Free Tier (R0)</div>
+                <p>
+                    Meta (WhatsApp's parent company) provides <strong>1,000 FREE Service/Utility Conversations per month</strong> for automated messaging.
+                </p>
+                <p style="margin: 0;">
+                    Across 6 laundromat branches handling ~500 customer notifications per month, all automated WhatsApp alerts fit completely inside Meta's free monthly allocation.
+                </p>
+            </div>
+        </div>
+
+        <div class="callout callout-tip" style="margin-top: 20px;">
+            <div class="callout-title">Final Recommendation</div>
+            <p style="margin: 0;">
+                By utilizing Option 1 with our automated Keep-Alive ping and WhatsApp customer notification system, your total recurring operational cost to run the LaundryLab platform across all 6 laundromats is <strong>just R89.00 ZAR per year</strong> for the <code>.co.za</code> domain name.
+            </p>
+        </div>
+
+        <div class="footer">
+            <span>LaundryLab Proposal &bull; Prepared for Mpho Raymond Popela</span>
+            <span>Page 2 of 2</span>
+        </div>
+    </div>
+
+</body>
+</html>

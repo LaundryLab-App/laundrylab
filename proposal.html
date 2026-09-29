@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>LaundryLab Digital Transformation Proposal & Technical Plan</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+        @page {
+            size: A4 portrait;
+            margin: 16mm 14mm;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            color: #1e293b;
+            line-height: 1.45;
+            background: #fff;
+            font-size: 10pt;
+        }
+
+        /* Cover Page styling */
+        .cover-page {
+            height: 98vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            page-break-after: always;
+            padding: 40px 30px;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #fff;
+            border-radius: 12px;
+        }
+
+        .cover-brand {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo-box {
+            width: 56px;
+            height: 56px;
+            background: linear-gradient(135deg, #2563eb, #06b6d4);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+            color: #fff;
+            font-weight: 800;
+        }
+
+        .brand-title {
+            font-size: 26pt;
+            font-weight: 900;
+            letter-spacing: 1px;
+            color: #ffffff;
+        }
+
+        .brand-sub {
+            font-size: 10.5pt;
+            color: #38bdf8;
+            font-weight: 600;
+        }
+
+        .cover-title-container {
+            margin: 40px 0;
+        }
+
+        .doc-category {
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-size: 9.5pt;
+            font-weight: 700;
+            color: #38bdf8;
+            margin-bottom: 12px;
+        }
+
+        .cover-main-title {
+            font-size: 24pt;
+            font-weight: 800;
+            line-height: 1.25;
+            margin-bottom: 16px;
+            color: #ffffff;
+        }
+
+        .cover-subtitle {
+            font-size: 11pt;
+            color: #94a3b8;
+            max-width: 600px;
+            line-height: 1.6;
+        }
+
+        .meta-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .meta-item label {
+            font-size: 8pt;
+            text-transform: uppercase;
+            color: #94a3b8;
+            font-weight: 700;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .meta-item span {
+            font-size: 11pt;
+            font-weight: 700;
+            color: #ffffff;
+        }
+
+        /* Section Header */
+        .section-header {
+            border-bottom: 2px solid #2563eb;
+            padding-bottom: 4px;
+            margin: 22px 0 12px 0;
+            color: #0f172a;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-header h2 {
+            font-size: 14pt;
+            font-weight: 800;
+        }
+
+        .section-number {
+            background: #2563eb;
+            color: #fff;
+            width: 24px;
+            height: 24px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10pt;
+            font-weight: 800;
+        }
+
+        p {
+            margin-bottom: 10px;
+            color: #334155;
+            font-size: 9.5pt;
+        }
+
+        /* Perspective Cards */
+        .perspective-card {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-left: 4px solid #2563eb;
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin-bottom: 12px;
+            page-break-inside: avoid;
+        }
+
+        .perspective-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+
+        .perspective-title {
+            font-size: 11.5pt;
+            font-weight: 800;
+            color: #0f172a;
+        }
+
+        .perspective-tag {
+            background: #dbeafe;
+            color: #1e40af;
+            padding: 3px 8px;
+            border-radius: 10px;
+            font-size: 8.5pt;
+            font-weight: 700;
+        }
+
+        .feature-list {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .feature-list li {
+            position: relative;
+            padding-left: 18px;
+            margin-bottom: 5px;
+            font-size: 9pt;
+            color: #334155;
+        }
+
+        .feature-list li::before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #10b981;
+            font-weight: 900;
+        }
+
+        /* Callout Box */
+        .callout-box {
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            border-radius: 8px;
+            padding: 10px 14px;
+            margin: 12px 0;
+            font-size: 9pt;
+            color: #1e40af;
+        }
+
+        .callout-box strong {
+            color: #1e3a8a;
+        }
+
+        /* Tables */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 12px 0;
+            font-size: 9pt;
+            page-break-inside: avoid;
+        }
+
+        th {
+            background: #0f172a;
+            color: #ffffff;
+            padding: 8px 12px;
+            text-align: left;
+            font-weight: 700;
+            font-size: 8.5pt;
+            text-transform: uppercase;
+        }
+
+        td {
+            padding: 8px 12px;
+            border-bottom: 1px solid #e2e8f0;
+            color: #334155;
+        }
+
+        tr:nth-child(even) td {
+            background: #f8fafc;
+        }
+
+        .price-badge {
+            background: rgba(16, 185, 129, 0.15);
+            color: #047857;
+            font-weight: 800;
+            padding: 3px 6px;
+            border-radius: 4px;
+        }
+
+        /* Signature Approval Box */
+        .approval-card {
+            background: #f8fafc;
+            border: 2px dashed #cbd5e1;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            page-break-inside: avoid;
+        }
+
+        .approval-title {
+            font-size: 12pt;
+            font-weight: 800;
+            color: #0f172a;
+            margin-bottom: 4px;
+            text-align: center;
+        }
+
+        .approval-sub {
+            font-size: 8.5pt;
+            color: #64748b;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .sig-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 30px;
+        }
+
+        .sig-line {
+            border-top: 1px solid #475569;
+            margin-top: 35px;
+            padding-top: 4px;
+            font-size: 8.5pt;
+            color: #475569;
+            font-weight: 600;
+        }
+
+        .page-break {
+            page-break-after: always;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ================= COVER PAGE (PAGE 1) ================= -->
+    <div class="cover-page">
+        <div class="cover-brand">
+            <div class="logo-box">LL</div>
+            <div>
+                <div class="brand-title">LAUNDRYLAB</div>
+                <div class="brand-sub">Express Laundromat Operations</div>
+            </div>
+        </div>
+
+        <div class="cover-title-container">
+            <div class="doc-category">Official Technical Proposal & System Blueprint</div>
+            <h1 class="cover-main-title">Multi-Branch Digital Transformation Platform</h1>
+            <p class="cover-subtitle">
+                A 100% cashless, fully audited digital web application designed for multi-branch ground floor laundromat operations, staff garment matching, customer SMS links, and owner financial reconciliation.
+            </p>
+        </div>
+
+        <div class="meta-grid">
+            <div class="meta-item">
+                <label>PREPARED FOR CLIENT</label>
+                <span>POPELA-EMPIRE</span>
+            </div>
+            <div class="meta-item">
+                <label>Operating Hours</label>
+                <span>Mon – Sun: 8:00 AM – 7:00 PM</span>
+            </div>
+            <div class="meta-item">
+                <label>Contact Line</label>
+                <span>067 935 6086</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= PAGE 2: EXECUTIVE SUMMARY & 3 PERSPECTIVES ================= -->
+    <div class="section-header">
+        <div class="section-number">1</div>
+        <h2>Executive Summary & System Scope</h2>
+    </div>
+
+    <p>
+        LaundryLab is modernizing its multi-location laundromat business by replacing manual spreadsheets with a unified, <strong>100% cashless digital web application</strong>. The platform eliminates cash-handling risks, automates pricing calculations using LaundryLab's official rate list, prevents garment loss through strict deposit/return matching, and provides ownership with real-time multi-branch financial visibility.
+    </p>
+
+    <div class="callout-box">
+        <strong>Zero Hardware Retrofit:</strong> No expensive IoT or electrical modifications are required inside washing machines. All transactions originate at the counter, and staff manage machine operations manually while the web application handles pricing, payments, receipts, SMS links, and reconciliation.
+    </div>
+
+    <div class="section-header">
+        <div class="section-number">2</div>
+        <h2>The Three System Perspectives</h2>
+    </div>
+
+    <!-- Perspective 1 -->
+    <div class="perspective-card">
+        <div class="perspective-header">
+            <div class="perspective-title">Perspective 1: The Business Owner</div>
+            <span class="perspective-tag">Executive Control & Oversight</span>
+        </div>
+        <ul class="feature-list">
+            <li><strong>Multi-Branch Real-Time Overview:</strong> Live side-by-side view of daily revenue, load counts, and throughput across all ground-floor branches.</li>
+            <li><strong>Cashless Revenue Split:</strong> Automated separation of <strong>Speed Point POS Card Receipts</strong>, <strong>Online Mobile Payments</strong>, and <strong>LaundryPass Accounts</strong>.</li>
+            <li><strong>Garment Loss Prevention Audit:</strong> Real-time reconciliation ensuring 100% of items deposited at intake match items handed back upon customer pickup across all locations.</li>
+            <li><strong>Staff Shift Accountability:</strong> Audit log tracking which staff member logged each transaction and reconciled shift totals.</li>
+            <li><strong>1-Click Excel CSV Export:</strong> Instant download of complete financial and transaction ledgers formatted for tax and accounting software.</li>
+        </ul>
+    </div>
+
+    <!-- Perspective 2 -->
+    <div class="perspective-card">
+        <div class="perspective-header">
+            <div class="perspective-title">Perspective 2: The Branch Staff Member</div>
+            <span class="perspective-tag">Branch Counter Station</span>
+        </div>
+        <ul class="feature-list">
+            <li><strong>Multi-User Staff Authentication (RBAC):</strong> Individual username/PIN login per branch (Mon–Sun: 8:00 AM – 7:00 PM) with audit stamping.</li>
+            <li><strong>Official LaundryLab Price Calculator:</strong> Instant calculation of scale weight (kg) or pair count against official rate rules (R25/kg to R80/pair).</li>
+            <li><strong>Mandatory Item Counting & SMS Dispatch:</strong> Capture sub-counts (Shirts, Pants, Jackets, Towels) and trigger automated <strong>SMS Digital Receipts</strong> to customer smartphones.</li>
+            <li><strong>Garment Return Matching Checklist:</strong> Verify returned items against original deposit records to guarantee a 100% match before handover.</li>
+            <li><strong>7:00 PM Shift Reconciliation:</strong> Balance physical Speed Point card slips against system records at shift closing.</li>
+        </ul>
+    </div>
+
+    <!-- Perspective 3 -->
+    <div class="perspective-card">
+        <div class="perspective-header">
+            <div class="perspective-title">Perspective 3: The Customer</div>
+            <span class="perspective-tag">SMS Mobile Links & Live Tracker</span>
+        </div>
+        <ul class="feature-list">
+            <li><strong>SMS Receipt Dispatch:</strong> Customer receives an instant SMS containing their digital receipt upon counter deposit.</li>
+            <li><strong>Online Payment Web Link:</strong> Customer taps link in SMS to pay via Apple Pay, Google Pay, Credit/Debit Card, or Instant EFT.</li>
+            <li><strong>Live Load Countdown Tracker Link:</strong> Customer taps link to view a live cycle countdown timer (e.g. 28:14 remaining) on their smartphone.</li>
+            <li><strong>Automated Readiness Alert:</strong> SMS text notification sent when laundry is washed, folded/ironed, and ready for pickup at the counter.</li>
+        </ul>
+    </div>
+
+    <div class="page-break"></div>
+
+    <!-- ================= PAGE 3: CATALOG & APPROVAL SIGN-OFF ================= -->
+    <div class="section-header">
+        <div class="section-number">3</div>
+        <h2>LaundryLab Official Price & Service Catalog</h2>
+    </div>
+
+    <p>
+        The web platform automatically calculates total charges based on LaundryLab's official rate matrix:
+    </p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Service Name</th>
+                <th>Pricing Unit</th>
+                <th>Official Rate (ZAR)</th>
+                <th>Automated Calculation Logic</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>Wash, Dry & Fold</strong></td>
+                <td>Per KG</td>
+                <td><span class="price-badge">R25 / KG</span></td>
+                <td>Scale Weight (kg) &times; R25.00</td>
+            </tr>
+            <tr>
+                <td><strong>Wash Only</strong></td>
+                <td>Per KG</td>
+                <td><span class="price-badge">R25 / KG</span></td>
+                <td>Scale Weight (kg) &times; R25.00</td>
+            </tr>
+            <tr>
+                <td><strong>Wash, Dry & Iron</strong></td>
+                <td>Per KG</td>
+                <td><span class="price-badge">R30 / KG</span></td>
+                <td>Scale Weight (kg) &times; R30.00</td>
+            </tr>
+            <tr>
+                <td><strong>Iron Only</strong></td>
+                <td>Per KG</td>
+                <td><span class="price-badge">R30 / KG</span></td>
+                <td>Scale Weight (kg) &times; R30.00</td>
+            </tr>
+            <tr>
+                <td><strong>Dry Only</strong></td>
+                <td>Per KG</td>
+                <td><span class="price-badge">R30 / KG</span></td>
+                <td>Scale Weight (kg) &times; R30.00</td>
+            </tr>
+            <tr>
+                <td><strong>Carpet Cleaning</strong></td>
+                <td>Per KG</td>
+                <td><span class="price-badge">R60 / KG</span></td>
+                <td>Scale Weight (kg) &times; R60.00</td>
+            </tr>
+            <tr>
+                <td><strong>Curtain Cleaning</strong></td>
+                <td>Per KG</td>
+                <td><span class="price-badge">R70 / KG</span></td>
+                <td>Scale Weight (kg) &times; R70.00</td>
+            </tr>
+            <tr>
+                <td><strong>Blanket Cleaning</strong></td>
+                <td>Per KG</td>
+                <td><span class="price-badge">R70 / KG</span></td>
+                <td>Scale Weight (kg) &times; R70.00</td>
+            </tr>
+            <tr>
+                <td><strong>Sneaker Wash</strong></td>
+                <td>Per Pair</td>
+                <td><span class="price-badge">R80 / PAIR</span></td>
+                <td>Quantity Pairs &times; R80.00</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- SIGN-OFF APPROVAL BOX -->
+    <div class="approval-card">
+        <div class="approval-title">Client Project Approval & Sign-Off</div>
+        <div class="approval-sub">
+            By signing below, POPELA-EMPIRE approves the functional scope, price catalog, 3 perspectives architecture, and system specification for the LaundryLab Digital Transformation Platform.
+        </div>
+
+        <div class="sig-grid">
+            <div>
+                <div class="sig-line">POPELA-EMPIRE Representative Name & Title</div>
+            </div>
+            <div>
+                <div class="sig-line">Client Signature & Date</div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

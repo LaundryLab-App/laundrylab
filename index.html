@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LaundryLab - Multi-Branch Operations & SMS Link Platform</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <!-- FontAwesome icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Top Navigation Bar -->
+    <nav class="navbar">
+        <div class="nav-brand">
+            <div class="logo-icon"><i class="fa-solid fa-soap"></i></div>
+            <div class="brand-text">
+                <span class="brand-name">LAUNDRYLAB</span>
+                <span class="brand-tag">Mon - Sun: 8am - 7pm | 067 935 6086</span>
+            </div>
+        </div>
+
+        <div class="nav-switcher">
+            <button class="nav-btn active" data-target="view-staff">
+                <i class="fa-solid fa-tablet-screen-button"></i> Staff Counter Station
+                <span class="badge" id="staff-pending-count">0</span>
+            </button>
+            <button class="nav-btn" data-target="view-customer">
+                <i class="fa-solid fa-mobile-screen-button"></i> Customer Mobile Web View
+            </button>
+            <button class="nav-btn" data-target="view-admin">
+                <i class="fa-solid fa-chart-line"></i> Owner Multi-Branch View
+            </button>
+        </div>
+
+        <div class="location-picker">
+            <i class="fa-solid fa-building-user"></i>
+            <select id="building-select">
+                <option value="Ground Floor - Horizon Towers">Ground Floor - Horizon Towers</option>
+                <option value="Ground Floor - Campus View">Ground Floor - Campus View</option>
+                <option value="Ground Floor - Metro Suites">Ground Floor - Metro Suites</option>
+            </select>
+        </div>
+    </nav>
+
+    <main class="app-container">
+
+        <!-- ================= STAFF INTAKE & RETURN VIEW ================= -->
+        <section id="view-staff" class="view-section active">
+            <div class="staff-header">
+                <div>
+                    <h2><i class="fa-solid fa-clipboard-check"></i> LaundryLab Staff Counter Station</h2>
+                    <p>Logged in: <strong id="logged-staff-name">Jane Doe (Ground Floor Operator)</strong></p>
+                </div>
+                <div class="header-actions">
+                    <button class="btn btn-primary" onclick="openIntakeModal()">
+                        <i class="fa-solid fa-plus-circle"></i> + New Customer Laundry Intake
+                    </button>
+                    <button class="btn btn-warning" onclick="openReconcileModal()">
+                        <i class="fa-solid fa-calculator"></i> End-of-Day Shift Reconcile (7PM)
+                    </button>
+                </div>
+            </div>
+
+            <!-- Price Catalog Quick Reference Bar -->
+            <div class="price-bar-card glass-card">
+                <div class="price-pill">Wash, Dry & Fold: <strong>R25/kg</strong></div>
+                <div class="price-pill">Wash, Dry & Iron: <strong>R30/kg</strong></div>
+                <div class="price-pill">Iron Only: <strong>R30/kg</strong></div>
+                <div class="price-pill">Carpet: <strong>R60/kg</strong></div>
+                <div class="price-pill">Curtains: <strong>R70/kg</strong></div>
+                <div class="price-pill">Blanket: <strong>R70/kg</strong></div>
+                <div class="price-pill">Sneaker Wash: <strong>R80/pair</strong></div>
+            </div>
+
+            <!-- Operational Sub-Tabs -->
+            <div class="staff-tabs" style="margin-top: 20px;">
+                <button class="staff-tab-btn active" onclick="switchStaffTab('tab-intake')">
+                    <i class="fa-solid fa-basket-shopping"></i> Active Washes & In-House Laundry (<span id="active-washes-count">0</span>)
+                </button>
+                <button class="staff-tab-btn" onclick="switchStaffTab('tab-returns')">
+                    <i class="fa-solid fa-handshake"></i> Customer Pickup & Garment Match Verification
+                </button>
+            </div>
+
+            <!-- Tab 1: Active Washes -->
+            <div id="tab-intake" class="staff-tab-content active">
+                <div class="staff-layout">
+                    <!-- Left: Incoming Order Cards -->
+                    <div class="card glass-card">
+                        <div class="card-header">
+                            <h3><i class="fa-solid fa-list-check"></i> Orders In-House Today</h3>
+                            <span class="refresh-pill" onclick="saveState()"><i class="fa-solid fa-rotate"></i> Sync</span>
+                        </div>
+                        <div class="queue-list" id="staff-intake-list">
+                            <!-- Dynamic Intake Items -->
+                        </div>
+                    </div>
+
+                    <!-- Right: Floor Machine Status & Shift Cashless Balance -->
+                    <div class="card glass-card">
+                        <h3><i class="fa-solid fa-grip"></i> Machine Floor Status</h3>
+                        <div class="floor-grid" id="staff-floor-grid">
+                            <!-- Dynamic Machines -->
+                        </div>
+
+                        <hr class="divider" style="margin: 20px 0;">
+
+                        <h3><i class="fa-solid fa-cash-register"></i> Shift Cashless Totals (ZAR / R)</h3>
+                        <div class="shift-totals-grid">
+                            <div class="shift-stat">
+                                <span><i class="fa-solid fa-credit-card"></i> Speed Point POS Card</span>
+                                <strong id="shift-speedpoint-total">R0.00</strong>
+                            </div>
+                            <div class="shift-stat">
+                                <span><i class="fa-solid fa-mobile-screen"></i> Online (SMS Pay Links)</span>
+                                <strong id="shift-online-total">R0.00</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab 2: Customer Pickup & Return Verification -->
+            <div id="tab-returns" class="staff-tab-content">
+                <div class="card glass-card">
+                    <div class="card-header">
+                        <h3><i class="fa-solid fa-box-open"></i> Customer Return Garment Check</h3>
+                        <div class="table-search">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <input type="text" id="return-search" placeholder="Search Order # or Customer Phone..." onkeyup="filterReturns()">
+                        </div>
+                    </div>
+
+                    <div class="queue-list" id="staff-return-list">
+                        <!-- Dynamic Returns List -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- ================= CUSTOMER MOBILE WEB VIEW (SMS LINKS) ================= -->
+        <section id="view-customer" class="view-section">
+            <div class="customer-hero">
+                <div class="hero-tag"><i class="fa-solid fa-comment-sms"></i> Customer SMS Digital Receipt & Link Portal</div>
+                <h2>Customer Mobile Web Page</h2>
+                <p>Opened via SMS link received after staff intake at LaundryLab counter.</p>
+            </div>
+
+            <!-- SMS Simulation Banner -->
+            <div class="sms-simulation-box glass-card">
+                <div class="sms-header"><i class="fa-solid fa-message"></i> SMS Message Received on Smartphone</div>
+                <p class="sms-body">
+                    <strong>LaundryLab Alert:</strong> Receipt for Order #<span id="sms-order-id">1084</span> (R112.50).<br/>
+                    💳 Pay Online: <a href="javascript:void(0)" onclick="switchCustomerSubTab('pay')">https://laundrylab.app/pay/1084</a><br/>
+                    ⏱️ Track Load Progress: <a href="javascript:void(0)" onclick="switchCustomerSubTab('track')">https://laundrylab.app/track/1084</a>
+                </p>
+            </div>
+
+            <div class="customer-subtabs">
+                <button class="cust-tab-btn active" id="btn-cust-pay" onclick="switchCustomerSubTab('pay')">
+                    <i class="fa-solid fa-credit-card"></i> 1. Online Payment Web Link
+                </button>
+                <button class="cust-tab-btn" id="btn-cust-track" onclick="switchCustomerSubTab('track')">
+                    <i class="fa-solid fa-stopwatch"></i> 2. Live Load Progress Tracker Link
+                </button>
+            </div>
+
+            <!-- Sub-tab A: Online Payment Web Link -->
+            <div id="cust-subtab-pay" class="cust-subtab-content active">
+                <div class="card glass-card checkout-card" style="max-width: 600px; margin: 0 auto;">
+                    <h3><i class="fa-solid fa-receipt"></i> Order #1084 Payment Breakdown</h3>
+                    
+                    <div class="summary-details">
+                        <div class="summary-row">
+                            <span>Branch</span>
+                            <strong id="summary-bldg">Ground Floor - Horizon Towers</strong>
+                        </div>
+                        <div class="summary-row">
+                            <span>Service Deposited</span>
+                            <strong id="summary-service-name">Wash, Dry & Fold (4.5 kg)</strong>
+                        </div>
+                        <div class="summary-row">
+                            <span>Items Recorded</span>
+                            <strong id="summary-item-count">8 items</strong>
+                        </div>
+                        <hr class="divider">
+                        <div class="summary-row total-row">
+                            <span>Total Payable (ZAR)</span>
+                            <strong class="grand-total" id="grand-total-price">R112.50</strong>
+                        </div>
+                    </div>
+
+                    <!-- Payment Method Picker -->
+                    <div class="form-group" style="margin-top: 20px;">
+                        <label>Select Cashless Channel</label>
+                        <select id="cust-pay-method" class="custom-select">
+                            <option value="Online (Apple Pay / GPay)">📱 Apple Pay / Google Pay</option>
+                            <option value="Online (Card)">💳 Credit / Debit Card</option>
+                            <option value="Online (Instant EFT)">⚡ Instant EFT</option>
+                            <option value="LaundryPass Account">👛 LaundryPass Prepaid Balance</option>
+                        </select>
+                    </div>
+
+                    <button class="pay-btn" onclick="processCustomerPayment()">
+                        <i class="fa-solid fa-lock"></i> Pay Now & Activate Load Tracker
+                    </button>
+                    
+                    <div class="security-badge">
+                        <i class="fa-solid fa-shield-halved"></i> 100% Cashless Encrypted Checkout
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sub-tab B: Live Load Progress Tracker Link -->
+            <div id="cust-subtab-track" class="cust-subtab-content">
+                <div class="card glass-card ticket-card">
+                    <div class="ticket-status-badge"><i class="fa-solid fa-circle-check"></i> LaundryLab Load Tracker Active</div>
+                    <h2>Order #1084 Live Progress</h2>
+                    <p>Track your wash cycle in real time on your phone.</p>
+                    
+                    <div class="ticket-grid">
+                        <div class="ticket-item">
+                            <span>Service</span>
+                            <strong id="ticket-service-name">Wash, Dry & Fold</strong>
+                        </div>
+                        <div class="ticket-item">
+                            <span>Recorded Items</span>
+                            <strong id="ticket-item-count">8 items</strong>
+                        </div>
+                        <div class="ticket-item">
+                            <span>Payment Status</span>
+                            <strong id="ticket-amount" style="color:var(--success);">Paid (Online)</strong>
+                        </div>
+                    </div>
+
+                    <div class="timer-box">
+                        <i class="fa-solid fa-stopwatch"></i>
+                        <span id="countdown-timer">35:00</span>
+                    </div>
+
+                    <p style="color: var(--text-muted); font-size: 13px;">
+                        <i class="fa-solid fa-bell"></i> You will receive an SMS alert when your laundry is washed, folded, and ready at the counter!
+                    </p>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- ================= OWNER MULTI-BRANCH ADMIN VIEW ================= -->
+        <section id="view-admin" class="view-section">
+            <div class="admin-header">
+                <div>
+                    <h2><i class="fa-solid fa-chart-pie"></i> LaundryLab Multi-Branch Owner Portal</h2>
+                    <p>Real-time performance across ground-floor branches & daily shift reconciliation</p>
+                </div>
+                <button class="btn btn-success" onclick="exportToCSV()">
+                    <i class="fa-solid fa-file-excel"></i> Export Ledger to Excel (CSV)
+                </button>
+            </div>
+
+            <!-- Multi-Location Performance Cards -->
+            <div class="stats-grid">
+                <div class="stat-card glass-card">
+                    <div class="stat-icon icon-blue"><i class="fa-solid fa-sack-dollar"></i></div>
+                    <div class="stat-info">
+                        <span>Today's Total Cashless Revenue</span>
+                        <h3 id="stat-total-rev">R0.00</h3>
+                        <small class="text-green"><i class="fa-solid fa-shield-check"></i> 100% Cashless Reconciled</small>
+                    </div>
+                </div>
+
+                <div class="stat-card glass-card">
+                    <div class="stat-icon icon-green"><i class="fa-solid fa-credit-card"></i></div>
+                    <div class="stat-info">
+                        <span>Speed Point Terminal POS</span>
+                        <h3 id="stat-speedpoint-rev">R0.00</h3>
+                        <small id="stat-speedpoint-count">0 Speed Point Receipts</small>
+                    </div>
+                </div>
+
+                <div class="stat-card glass-card">
+                    <div class="stat-icon icon-purple"><i class="fa-solid fa-mobile-screen"></i></div>
+                    <div class="stat-info">
+                        <span>Online SMS Pay Links</span>
+                        <h3 id="stat-online-rev">R0.00</h3>
+                        <small id="stat-online-count">0 Online Link Payments</small>
+                    </div>
+                </div>
+
+                <div class="stat-card glass-card">
+                    <div class="stat-icon icon-orange"><i class="fa-solid fa-shirt"></i></div>
+                    <div class="stat-info">
+                        <span>Item Count Match Audit</span>
+                        <h3 id="stat-items-balance">0 / 0 Items</h3>
+                        <small class="text-green"><i class="fa-solid fa-circle-check"></i> 100% Garment Match</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Branch Performance Grid -->
+            <h3 style="margin-bottom: 16px;"><i class="fa-solid fa-building"></i> Branch Performance Breakdown</h3>
+            <div class="building-cards-grid" id="building-cards-container">
+                <!-- Dynamic Location Summary Cards -->
+            </div>
+
+            <!-- Admin Transactions Table -->
+            <div class="card glass-card table-card" style="margin-top: 24px;">
+                <div class="card-header">
+                    <h3><i class="fa-solid fa-receipt"></i> Multi-Branch Digital Audit Ledger</h3>
+                    <div class="table-search">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text" id="ledger-search" placeholder="Search customer, branch, staff, or service..." onkeyup="filterLedger()">
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Order ID</th>
+                                <th>Timestamp</th>
+                                <th>Branch</th>
+                                <th>Customer & Staff</th>
+                                <th>Service & Weight</th>
+                                <th>Item Match Count</th>
+                                <th>Payment Channel</th>
+                                <th>Amount (ZAR)</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin-ledger-body">
+                            <!-- Dynamic Ledger Rows -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Modal 1: New Customer Intake Modal (Staff) -->
+    <div class="modal-overlay" id="staff-intake-modal">
+        <div class="modal-content glass-card wide-modal">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-basket-shopping"></i> Staff Laundry Intake & SMS Link Generator</h3>
+                <button class="close-btn" onclick="closeIntakeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-grid-2">
+                    <!-- Left: Customer & Catalog Selection -->
+                    <div>
+                        <div class="form-group">
+                            <label>Customer Name & Mobile Number (For SMS Links)</label>
+                            <input type="text" id="modal-intake-name" placeholder="e.g. Sarah Jenkins (067 999 1234)" class="custom-input">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>LaundryLab Official Service Catalog</label>
+                            <select id="modal-intake-service" class="custom-select" onchange="calcModalIntakePrice()">
+                                <option value="Wash, Dry & Fold" data-rate="25">Wash, Dry & Fold (R25 / KG)</option>
+                                <option value="Wash, Dry & Iron" data-rate="30">Wash, Dry & Iron (R30 / KG)</option>
+                                <option value="Iron Only" data-rate="30">Iron Only (R30 / KG)</option>
+                                <option value="Wash Only" data-rate="25">Wash Only (R25 / KG)</option>
+                                <option value="Dry Only" data-rate="30">Dry Only (R30 / KG)</option>
+                                <option value="Carpet Cleaning" data-rate="60">Carpet Cleaning (R60 / KG)</option>
+                                <option value="Curtain Cleaning" data-rate="70">Curtain Cleaning (R70 / KG)</option>
+                                <option value="Blanket Cleaning" data-rate="70">Blanket Cleaning (R70 / KG)</option>
+                                <option value="Sneaker Wash" data-rate="80">Sneaker Wash (R80 / PAIR)</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label id="modal-quantity-label">Weight (KG) or Pairs</label>
+                            <input type="number" id="modal-intake-weight" value="4.5" step="0.5" class="custom-input" onchange="calcModalIntakePrice()">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Payment Channel</label>
+                            <select id="modal-intake-paymethod" class="custom-select">
+                                <option value="Speed Point (Card POS)">💳 Speed Point Terminal POS (Paid at Counter)</option>
+                                <option value="Online (SMS Link)">📱 Send SMS Online Payment Link to Customer Phone</option>
+                                <option value="LaundryPass Account">👛 LaundryPass Prepaid Balance</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Right: Item Counts -->
+                    <div>
+                        <div class="form-group">
+                            <label><i class="fa-solid fa-list-ol"></i> Item Count Breakdown (Mandatory for Return Matching)</label>
+                            <div class="item-count-grid">
+                                <div class="item-input-group">
+                                    <span>Shirts / Tops</span>
+                                    <input type="number" id="modal-cnt-shirts" value="4" min="0" onchange="calcModalIntakePrice()">
+                                </div>
+                                <div class="item-input-group">
+                                    <span>Pants / Shorts</span>
+                                    <input type="number" id="modal-cnt-pants" value="3" min="0" onchange="calcModalIntakePrice()">
+                                </div>
+                                <div class="item-input-group">
+                                    <span>Jackets / Outerwear</span>
+                                    <input type="number" id="modal-cnt-jackets" value="1" min="0" onchange="calcModalIntakePrice()">
+                                </div>
+                                <div class="item-input-group">
+                                    <span>Towels / Bedding / Other</span>
+                                    <input type="number" id="modal-cnt-towels" value="2" min="0" onchange="calcModalIntakePrice()">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="modal-price-display">
+                            Total Item Count: <strong id="modal-total-items-disp">10 items</strong> | Payable: <strong id="modal-total-price-disp">R112.50</strong>
+                        </div>
+
+                        <button class="btn btn-primary" style="width: 100%; padding: 14px;" onclick="saveStaffIntakeOrder()">
+                            <i class="fa-solid fa-paper-plane"></i> Save Intake & Send SMS Receipt + Links
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Modal 2: Return Verification Modal -->
+    <div class="modal-overlay" id="staff-return-modal">
+        <div class="modal-content glass-card">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-handshake"></i> Return Garment Matching Checklist</h3>
+                <button class="close-btn" onclick="closeReturnModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="return-verification-box">
+                    <h4 id="return-modal-title">Order #1081 - Customer Sarah</h4>
+                    <p id="return-modal-subtitle">Match each item count given back to customer:</p>
+
+                    <div class="item-matching-checklist" id="return-checklist-container">
+                        <!-- Dynamic Checklist -->
+                    </div>
+
+                    <div class="match-status-box" id="return-match-status">
+                        <i class="fa-solid fa-circle-notch fa-spin"></i> Verifying Item Match...
+                    </div>
+
+                    <button class="btn btn-success" id="confirm-return-btn" style="width: 100%; padding: 14px; margin-top: 15px;" onclick="confirmGarmentHandover()">
+                        <i class="fa-solid fa-box-check"></i> Confirm 100% Item Match & Hand Over
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Modal 3: End-of-Day Reconciliation Modal -->
+    <div class="modal-overlay" id="staff-reconcile-modal">
+        <div class="modal-content glass-card">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-calculator"></i> Shift End-of-Day Reconciliation (7:00 PM)</h3>
+                <button class="close-btn" onclick="closeReconcileModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="reconcile-summary-box">
+                    <h4>Branch: <span id="recon-bldg-name">Ground Floor - Horizon Towers</span></h4>
+                    <div class="summary-row">
+                        <span>Speed Point POS Card Slip Total:</span>
+                        <strong id="recon-speedpoint">R0.00</strong>
+                    </div>
+                    <div class="summary-row">
+                        <span>Online Payments Total:</span>
+                        <strong id="recon-online">R0.00</strong>
+                    </div>
+                    <div class="summary-row">
+                        <span>LaundryPass Account Total:</span>
+                        <strong id="recon-account">R0.00</strong>
+                    </div>
+                    <hr class="divider">
+                    <div class="summary-row total-row">
+                        <span>Total Cashless Shift Revenue:</span>
+                        <strong id="recon-grand-total" style="color: var(--success);">R0.00</strong>
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-top: 15px;">
+                    <label>Shift Notes / Speed Point Terminal Batch Slip #</label>
+                    <input type="text" id="recon-notes" placeholder="e.g. Batch Slip #9941 Verified by Jane Doe" class="custom-input">
+                </div>
+
+                <button class="btn btn-warning" style="width: 100%; padding: 14px;" onclick="submitDayReconciliation()">
+                    <i class="fa-solid fa-lock"></i> Reconcile & Lock Shift
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="toast">Notification message</div>
+
+    <script src="app.js"></script>
+</body>
+</html>
