@@ -71,6 +71,8 @@ export const App: React.FC = () => {
               />
 
               {/* Customer Standalone Public Routes (No Navbar) */}
+              <Route path="/track" element={<CustomerPortal />} />
+              <Route path="/pay" element={<CustomerPortal />} />
               <Route path="/track/:orderId" element={<CustomerPortal />} />
               <Route path="/pay/:orderId" element={<CustomerPortal />} />
 

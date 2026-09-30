@@ -113,9 +113,12 @@ def get_orders(branch: Optional[str] = None):
 
 @app.get("/api/orders/{order_id}")
 def get_order(order_id: str):
+    clean_id = str(order_id).strip().replace(" ", "").replace("#", "")
     orders = db.fetch_orders()
     for o in orders:
-        if str(o.get("id")) == str(order_id):
+        o_id = str(o.get("id", "")).strip().replace(" ", "").replace("#", "")
+        o_phone = str(o.get("customerPhone", "")).strip().replace(" ", "")
+        if o_id == clean_id or (clean_id and o_phone.endswith(clean_id[-9:])):
             return o
     raise HTTPException(status_code=404, detail="Order not found")
 

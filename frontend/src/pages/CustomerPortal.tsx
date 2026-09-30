@@ -19,7 +19,8 @@ import {
   Building,
   HelpCircle,
   XCircle,
-  ArrowRight
+  ArrowRight,
+  Search
 } from 'lucide-react';
 import { PaymentMethod, ProofOfPayment } from '../types/laundry';
 
@@ -45,20 +46,56 @@ export const CustomerPortal: React.FC = () => {
   }, [location.pathname]);
 
   const [directOrder, setDirectOrder] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(!!orderId);
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [searchError, setSearchError] = useState<string | null>(null);
 
-  const matchedOrder = orders.find(o => o.id === (orderId || '1081'));
-  const order = matchedOrder || directOrder || (orderId ? undefined : orders[0]);
+  const matchedOrder = orders.find(o => o.id === (orderId || ''));
+  const order = matchedOrder || directOrder;
 
   useEffect(() => {
-    if (orderId && !matchedOrder) {
+    if (orderId) {
+      if (matchedOrder) {
+        setIsLoading(false);
+        return;
+      }
+      setIsLoading(true);
       fetch(`/api/orders/${orderId}`)
         .then(res => res.ok ? res.json() : null)
         .then(data => {
           if (data) setDirectOrder(data);
+          setIsLoading(false);
         })
-        .catch(() => {});
+        .catch(() => {
+          setIsLoading(false);
+        });
+    } else {
+      setIsLoading(false);
     }
   }, [orderId, matchedOrder]);
+
+  const handleManualSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    const query = searchQuery.trim();
+    if (!query) return;
+    setIsLoading(true);
+    setSearchError(null);
+    fetch(`/api/orders/${query}`)
+      .then(res => res.ok ? res.json() : null)
+      .then(data => {
+        if (data) {
+          setDirectOrder(data);
+          setSearchError(null);
+        } else {
+          setSearchError(`No order found matching "${query}". Please check your receipt or contact counter staff.`);
+        }
+        setIsLoading(false);
+      })
+      .catch(() => {
+        setSearchError('Unable to connect to server. Please try again.');
+        setIsLoading(false);
+      });
+  };
 
   // Upload Form State
   const [popFile, setPopFile] = useState<File | null>(null);
@@ -149,21 +186,57 @@ export const CustomerPortal: React.FC = () => {
     showToast(`Order #${order.id} digital sign-off completed by customer!`);
   };
 
-  if (!order) {
+  if (isLoading) {
     return (
-      <div className="app-container" style={{ textAlign: 'center', paddingTop: '60px' }}>
-        <h2>Order Not Found</h2>
-        <p style={{ color: 'var(--text-muted)' }}>Please check your SMS or WhatsApp link.</p>
+      <div className="app-container" style={{ maxWidth: '600px', margin: '40px auto', textAlign: 'center', padding: '60px 20px' }}>
+        <Clock size={48} style={{ color: 'var(--brand-primary)', margin: '0 auto 16px auto', animation: 'spin 3s linear infinite' }} />
+        <h3 style={{ fontSize: '20px', fontWeight: 700, marginBottom: '8px' }}>
+          {orderId ? `Loading Order #${orderId}...` : 'Searching LaundryLab...'}
+        </h3>
+        <p style={{ color: 'var(--text-muted)', fontSize: '14px' }}>Retrieving live wash cycle status and receipt details from LaundryLab server...</p>
       </div>
     );
   }
 
   if (!order) {
     return (
-      <div className="app-container" style={{ maxWidth: '780px', textAlign: 'center', padding: '60px 20px' }}>
-        <Clock size={40} style={{ color: 'var(--brand-primary)', margin: '0 auto 16px auto' }} />
-        <h3>Loading Order #{orderId}...</h3>
-        <p style={{ color: 'var(--text-muted)' }}>Retrieving live wash cycle status and receipt details from LaundryLab server...</p>
+      <div className="app-container" style={{ maxWidth: '540px', margin: '40px auto', padding: '16px' }}>
+        <div className="glass-card" style={{ textAlign: 'center', padding: '40px 24px', borderRadius: '16px' }}>
+          <div style={{ width: '64px', height: '64px', background: 'rgba(37, 99, 235, 0.1)', color: 'var(--brand-primary)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px auto' }}>
+            <Search size={32} />
+          </div>
+          <h2 style={{ fontSize: '24px', fontWeight: 800, marginBottom: '8px', color: 'var(--text-main)' }}>Track Your Laundry</h2>
+          <p style={{ color: 'var(--text-muted)', fontSize: '14.5px', marginBottom: '28px', lineHeight: 1.5 }}>
+            Enter your 4-digit Order Number or Phone Number to view live washing machine status, payment approval, and garment sign-off.
+          </p>
+
+          <form onSubmit={handleManualSearch} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <input
+              type="text"
+              className="form-control"
+              placeholder="e.g. 1081 or 070 371 4689"
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              style={{ padding: '14px 16px', fontSize: '15px', borderRadius: '10px', width: '100%', textAlign: 'center' }}
+              autoFocus
+            />
+            <button type="submit" className="btn btn-primary" style={{ padding: '14px', fontSize: '15px', fontWeight: 700, borderRadius: '10px' }}>
+              🔍 Track Order
+            </button>
+          </form>
+
+          {searchError && (
+            <div style={{ marginTop: '20px', padding: '12px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '8px', color: '#b91c1c', fontSize: '13.5px' }}>
+              {searchError}
+            </div>
+          )}
+
+          {orderId && !searchError && (
+            <div style={{ marginTop: '24px', paddingTop: '16px', borderTop: '1px solid var(--border-color)', color: 'var(--text-muted)', fontSize: '13px' }}>
+              Order #{orderId} was not found. Please check your SMS / WhatsApp receipt or search with your mobile number above.
+            </div>
+          )}
+        </div>
       </div>
     );
   }
