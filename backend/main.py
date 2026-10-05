@@ -312,6 +312,36 @@ def get_order(order_id: str):
             return o
     raise HTTPException(status_code=404, detail="Order not found")
 
+@app.post("/api/orders/{order_id}/pop")
+def submit_order_pop(order_id: str, payload: Dict[str, Any] = Body(...)):
+    clean_id = str(order_id).strip().replace(" ", "").replace("#", "")
+    orders = db.fetch_orders()
+    target_order = None
+    for o in orders:
+        if str(o.get("id")) == clean_id:
+            target_order = o
+            break
+
+    if not target_order:
+        raise HTTPException(status_code=404, detail="Order not found")
+
+    pop_data = {
+        "fileData": payload.get("fileData"),
+        "fileName": payload.get("fileName", "receipt.png"),
+        "uploadedAt": payload.get("uploadedAt", datetime.now().strftime("%H:%M")),
+        "reference": payload.get("reference", ""),
+        "paymentChannel": payload.get("paymentChannel", "Nedbank EFT"),
+        "verified": False
+    }
+
+    target_order["paymentStatus"] = "POP Uploaded (Pending Verification)"
+    target_order["paymentMethod"] = "Pay Later (EFT / PayShap / Proof of Payment)"
+    target_order["proofOfPayment"] = pop_data
+
+    # Persist updated order to Supabase
+    db.upsert_orders([target_order])
+    return {"success": True, "order": target_order}
+
 @app.post("/api/shift_reconciliations")
 def save_shift_reconciliation(payload: Dict[str, Any] = Body(...)):
     ok = db.create_reconciliation(payload)

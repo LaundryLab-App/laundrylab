@@ -22,7 +22,7 @@ import {
   ArrowRight,
   Search
 } from 'lucide-react';
-import { PaymentMethod, ProofOfPayment } from '../types/laundry';
+import { Order, PaymentMethod, ProofOfPayment } from '../types/laundry';
 
 export const CustomerPortal: React.FC = () => {
   const { orderId } = useParams<{ orderId: string }>();
@@ -45,7 +45,7 @@ export const CustomerPortal: React.FC = () => {
     }
   }, [location.pathname]);
 
-  const [directOrder, setDirectOrder] = useState<any>(null);
+  const [directOrder, setDirectOrder] = useState<Order | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(!!orderId);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [searchError, setSearchError] = useState<string | null>(null);
@@ -55,24 +55,30 @@ export const CustomerPortal: React.FC = () => {
 
   useEffect(() => {
     if (orderId) {
-      if (matchedOrder) {
-        setIsLoading(false);
-        return;
+      const fetchOrder = () => {
+        fetch(`/api/orders/${orderId}`)
+          .then(res => res.ok ? res.json() : null)
+          .then(data => {
+            if (data) {
+              setDirectOrder(data);
+              setIsLoading(false);
+            }
+          })
+          .catch(() => {
+            setIsLoading(false);
+          });
+      };
+
+      if (!matchedOrder && !directOrder) {
+        setIsLoading(true);
       }
-      setIsLoading(true);
-      fetch(`/api/orders/${orderId}`)
-        .then(res => res.ok ? res.json() : null)
-        .then(data => {
-          if (data) setDirectOrder(data);
-          setIsLoading(false);
-        })
-        .catch(() => {
-          setIsLoading(false);
-        });
+      fetchOrder();
+      const interval = setInterval(fetchOrder, 3000);
+      return () => clearInterval(interval);
     } else {
       setIsLoading(false);
     }
-  }, [orderId, matchedOrder]);
+  }, [orderId]);
 
   const handleManualSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -147,15 +153,47 @@ export const CustomerPortal: React.FC = () => {
       const file = e.target.files[0];
       setPopFile(file);
 
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPopPreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+      if (file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          const img = new Image();
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            let width = img.width;
+            let height = img.height;
+            const maxDim = 1200;
+            if (width > height && width > maxDim) {
+              height = Math.round((height * maxDim) / width);
+              width = maxDim;
+            } else if (height > maxDim) {
+              width = Math.round((width * maxDim) / height);
+              height = maxDim;
+            }
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            if (ctx) {
+              ctx.drawImage(img, 0, 0, width, height);
+              const compressedData = canvas.toDataURL('image/jpeg', 0.82);
+              setPopPreview(compressedData);
+            } else {
+              setPopPreview(event.target?.result as string);
+            }
+          };
+          img.src = event.target?.result as string;
+        };
+        reader.readAsDataURL(file);
+      } else {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setPopPreview(reader.result as string);
+        };
+        reader.readAsDataURL(file);
+      }
     }
   };
 
-  const handlePopSubmit = (e: React.FormEvent) => {
+  const handlePopSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!order) return;
 
@@ -167,17 +205,49 @@ export const CustomerPortal: React.FC = () => {
     setIsSubmittingPop(true);
 
     const nowStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    
-    submitProofOfPayment(order.id, {
+    const popData = {
       fileData: popPreview || undefined,
       fileName: popFile?.name || 'receipt_screenshot.png',
       uploadedAt: nowStr,
       reference: popReference.trim() || `${order.customerName} ${order.unitNumber || ''}`.trim(),
-      paymentChannel: popChannel
-    });
+      paymentChannel: popChannel,
+      verified: false
+    };
 
-    setIsSubmittingPop(false);
+    // 1. Instantly transition local state so the customer sees "Under Review" immediately!
+    setDirectOrder((prev: Order | null) => prev ? {
+      ...prev,
+      paymentStatus: 'POP Uploaded (Pending Verification)',
+      paymentMethod: 'Pay Later (EFT / PayShap / Proof of Payment)',
+      proofOfPayment: popData
+    } : null);
+
+    // 2. Clear upload inputs
     setPopFile(null);
+    setPopPreview(null);
+    setPopReference('');
+
+    // 3. Persist directly to backend
+    try {
+      const res = await fetch(`/api/orders/${order.id}/pop`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(popData)
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.order) {
+          setDirectOrder(data.order);
+        }
+      }
+    } catch (err) {
+      // Background sync will retry
+    }
+
+    // 4. Update LaundryContext
+    submitProofOfPayment(order.id, popData);
+    showToast('Proof of payment received! Management has been notified for verification.');
+    setIsSubmittingPop(false);
   };
 
   const handleCustomerSignoff = () => {
