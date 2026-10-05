@@ -292,13 +292,20 @@ def update_state(payload: Dict[str, Any] = Body(...)):
             inc_id = str(incoming.get("id"))
             existing = existing_orders.get(inc_id)
             if existing:
+                # Deep merge with existing order so partial payloads never blank out fields
+                merged = dict(existing)
+                for k, v in incoming.items():
+                    if v is not None and v != "":
+                        merged[k] = v
                 db_status = str(existing.get("paymentStatus") or "")
                 inc_status = str(incoming.get("paymentStatus") or "")
                 # If DB has Rejected or Verified, never let a stale client regress it to pending or unpaid
                 if ("Rejected" in db_status or "Verified" in db_status) and inc_status != db_status:
-                    incoming["paymentStatus"] = existing.get("paymentStatus")
-                    incoming["proofOfPayment"] = existing.get("proofOfPayment")
-            merged_orders.append(incoming)
+                    merged["paymentStatus"] = existing.get("paymentStatus")
+                    merged["proofOfPayment"] = existing.get("proofOfPayment")
+                merged_orders.append(merged)
+            else:
+                merged_orders.append(incoming)
         db.upsert_orders(merged_orders)
 
     if "machines" in payload and isinstance(payload["machines"], dict):
