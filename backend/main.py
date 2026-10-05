@@ -342,6 +342,64 @@ def submit_order_pop(order_id: str, payload: Dict[str, Any] = Body(...)):
     db.upsert_orders([target_order])
     return {"success": True, "order": target_order}
 
+@app.post("/api/orders/{order_id}/verify")
+def verify_order_pop(order_id: str, payload: Dict[str, Any] = Body(...)):
+    clean_id = str(order_id).strip().replace(" ", "").replace("#", "")
+    orders = db.fetch_orders()
+    target_order = None
+    for o in orders:
+        if str(o.get("id")) == clean_id:
+            target_order = o
+            break
+
+    if not target_order:
+        raise HTTPException(status_code=404, detail="Order not found")
+
+    verified_by = payload.get("verifiedBy", "Mpho (Owner)")
+    now_time = datetime.now().strftime("%H:%M")
+
+    pop = target_order.get("proofOfPayment") or {}
+    pop["verified"] = True
+    pop["verifiedAt"] = now_time
+    pop["verifiedBy"] = verified_by
+    pop["rejected"] = False
+
+    target_order["paymentStatus"] = "Paid (EFT/PayShap Verified)"
+    target_order["proofOfPayment"] = pop
+
+    db.upsert_orders([target_order])
+    return {"success": True, "order": target_order}
+
+@app.post("/api/orders/{order_id}/reject")
+def reject_order_pop(order_id: str, payload: Dict[str, Any] = Body(...)):
+    clean_id = str(order_id).strip().replace(" ", "").replace("#", "")
+    orders = db.fetch_orders()
+    target_order = None
+    for o in orders:
+        if str(o.get("id")) == clean_id:
+            target_order = o
+            break
+
+    if not target_order:
+        raise HTTPException(status_code=404, detail="Order not found")
+
+    reason = payload.get("reason", "Receipt reference not matching statement or incorrect amount.")
+    rejected_by = payload.get("rejectedBy", "Mpho (Owner)")
+    now_time = datetime.now().strftime("%H:%M")
+
+    pop = target_order.get("proofOfPayment") or {}
+    pop["rejected"] = True
+    pop["rejectionReason"] = reason
+    pop["rejectedAt"] = now_time
+    pop["rejectedBy"] = rejected_by
+    pop["verified"] = False
+
+    target_order["paymentStatus"] = "POP Rejected (Re-upload Required)"
+    target_order["proofOfPayment"] = pop
+
+    db.upsert_orders([target_order])
+    return {"success": True, "order": target_order}
+
 @app.post("/api/shift_reconciliations")
 def save_shift_reconciliation(payload: Dict[str, Any] = Body(...)):
     ok = db.create_reconciliation(payload)

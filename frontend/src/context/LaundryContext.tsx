@@ -381,7 +381,8 @@ export const LaundryProvider: React.FC<{ children: React.ReactNode }> = ({ child
           ...o.proofOfPayment,
           verified: true,
           verifiedAt: nowStr,
-          verifiedBy
+          verifiedBy,
+          rejected: false
         } : undefined;
         return {
           ...o,
@@ -391,6 +392,20 @@ export const LaundryProvider: React.FC<{ children: React.ReactNode }> = ({ child
       }
       return o;
     }));
+
+    // Directly persist to backend endpoint so background poller doesn't race
+    fetch(`/api/orders/${orderId}/verify`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ verifiedBy })
+    }).then(res => res.ok ? res.json() : null)
+      .then(data => {
+        if (data && data.order) {
+          setOrders(prev => prev.map(o => o.id === orderId ? data.order : o));
+        }
+      })
+      .catch(() => {});
+
     showToast(`Order #${orderId} payment verified & approved!`);
   };
 
@@ -431,6 +446,7 @@ export const LaundryProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const rejectProofOfPayment = (orderId: string, reason?: string, rejectedBy: string = 'Management') => {
     const nowStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const finalReason = reason || 'Receipt reference not matching statement or incorrect amount.';
     setOrders(prev => prev.map(o => {
       if (o.id === orderId) {
         return {
@@ -439,15 +455,39 @@ export const LaundryProvider: React.FC<{ children: React.ReactNode }> = ({ child
           proofOfPayment: o.proofOfPayment ? {
             ...o.proofOfPayment,
             rejected: true,
-            rejectionReason: reason || 'Invalid receipt or reference not matching statement',
+            rejectionReason: finalReason,
+            rejectedAt: nowStr,
+            rejectedBy,
+            verified: false
+          } : {
+            uploadedAt: nowStr,
+            reference: 'None',
+            paymentChannel: 'Nedbank EFT',
+            verified: false,
+            rejected: true,
+            rejectionReason: finalReason,
             rejectedAt: nowStr,
             rejectedBy
-          } : undefined
+          }
         };
       }
       return o;
     }));
-    showToast(`POP rejected for Order #${orderId}${reason ? ': ' + reason : ''}. Customer notified to re-upload.`, 'error');
+
+    // Directly persist to backend endpoint so background poller doesn't race
+    fetch(`/api/orders/${orderId}/reject`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ reason: finalReason, rejectedBy })
+    }).then(res => res.ok ? res.json() : null)
+      .then(data => {
+        if (data && data.order) {
+          setOrders(prev => prev.map(o => o.id === orderId ? data.order : o));
+        }
+      })
+      .catch(() => {});
+
+    showToast(`POP rejected for Order #${orderId}: ${finalReason}. Customer notified to re-upload.`, 'error');
   };
 
   const customerSignoffGarments = (orderId: string, itemBreakdownMatch: boolean) => {
