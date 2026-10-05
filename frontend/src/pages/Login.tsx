@@ -12,11 +12,21 @@ export const Login: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [isLocked, setIsLocked] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleLoginSubmit = (e: React.FormEvent) => {
+  const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (login(email, password)) {
-      const found = ACCOUNTS.find(a => a.email.toLowerCase() === email.toLowerCase());
+    setError('');
+    setIsLocked(false);
+    setIsSubmitting(true);
+
+    const result = await login(email, password);
+    setIsSubmitting(false);
+
+    if (result.success) {
+      const cleanEmail = email.toLowerCase().trim();
+      const found = ACCOUNTS.find(a => a.email.toLowerCase() === cleanEmail);
       if (found) {
         if (found.role === 'Owner') {
           setCurrentRole('Owner');
@@ -28,7 +38,13 @@ export const Login: React.FC = () => {
         }
       }
     } else {
-      setError('Invalid email or password. Please try again.');
+      if (result.isLocked) {
+        setIsLocked(true);
+        setError(result.error || 'This station account is currently active on another device.');
+      } else {
+        setIsLocked(false);
+        setError(result.error || 'Invalid email or password. Please try again.');
+      }
     }
   };
 
@@ -49,7 +65,17 @@ export const Login: React.FC = () => {
 
         <form onSubmit={handleLoginSubmit} style={{ marginBottom: '16px' }}>
           {error && (
-            <div style={{ background: 'var(--danger-light)', color: '#b91c1c', padding: '10px', borderRadius: '8px', marginBottom: '16px', fontSize: '13px' }}>
+            <div style={{ 
+              background: isLocked ? 'rgba(239, 68, 68, 0.1)' : 'var(--danger-light)', 
+              color: '#b91c1c', 
+              border: isLocked ? '1px solid #f87171' : 'none',
+              padding: '14px', 
+              borderRadius: '10px', 
+              marginBottom: '16px', 
+              fontSize: '13.5px',
+              lineHeight: 1.5
+            }}>
+              {isLocked && <strong style={{ display: 'block', marginBottom: '4px' }}>🔒 Station In Use (Device Lock)</strong>}
               {error}
             </div>
           )}
@@ -59,7 +85,7 @@ export const Login: React.FC = () => {
             <input 
               type="email" 
               className="custom-input" 
-              placeholder="e.g. clyde@laundylab.com"
+              placeholder="e.g. mpho@laundylab.com or towers@laundylab.com"
               value={email}
               onChange={e => setEmail(e.target.value)}
               required
@@ -80,8 +106,13 @@ export const Login: React.FC = () => {
             />
           </div>
 
-          <button type="submit" className="btn btn-primary" style={{ width: '100%', padding: '12px' }}>
-            <LogIn size={16} /> Sign In to Assigned Branch
+          <button 
+            type="submit" 
+            className="btn btn-primary" 
+            style={{ width: '100%', padding: '12px' }}
+            disabled={isSubmitting}
+          >
+            <LogIn size={16} /> {isSubmitting ? 'Verifying Station Access...' : 'Sign In to Assigned Branch'}
           </button>
         </form>
 

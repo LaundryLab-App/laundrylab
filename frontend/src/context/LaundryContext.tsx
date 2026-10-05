@@ -12,12 +12,12 @@ import {
 } from '../types/laundry';
 
 export const BRANCHES: BranchInfo[] = [
-  { name: 'Absa Towers', address: 'Ground Floor, Absa Towers Main', machinesCount: 4, operatorName: 'Clyde' },
-  { name: 'Zuri', address: 'Ground Floor, Zuri Towers', machinesCount: 4, operatorName: 'Nkateko' },
-  { name: 'Nala', address: 'Ground Floor, Nala Suites', machinesCount: 4, operatorName: 'Skhathi' },
-  { name: 'The Encore', address: 'Ground Floor, The Encore Plaza', machinesCount: 4, operatorName: 'Mpho' },
-  { name: 'Georgia', address: 'Ground Floor, Georgia House', machinesCount: 4, operatorName: 'Pops' },
-  { name: 'Centurion', address: 'Ground Floor, Centurion Center', machinesCount: 4, operatorName: 'Kairo' },
+  { name: 'Absa Towers', address: 'Ground Floor, Absa Towers Main', machinesCount: 4, operatorName: 'Nokulunga' },
+  { name: 'Zuri', address: 'Ground Floor, Zuri Towers', machinesCount: 4, operatorName: 'Ntombi' },
+  { name: 'Nala', address: 'Ground Floor, Nala Suites', machinesCount: 4, operatorName: 'Nokulunga' },
+  { name: 'The Encore', address: 'Ground Floor, The Encore Plaza', machinesCount: 4, operatorName: 'Smiso' },
+  { name: 'Georgia', address: 'Ground Floor, Georgia House', machinesCount: 4, operatorName: 'Unassigned' },
+  { name: 'Centurion', address: 'Ground Floor, Centurion Center', machinesCount: 4, operatorName: 'Unassigned' },
 ];
 
 export const BANK_ACCOUNT_DETAILS = {

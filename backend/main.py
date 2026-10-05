@@ -1,6 +1,8 @@
 import os
 import json
-from fastapi import FastAPI, HTTPException, Body
+import uuid
+from fastapi import FastAPI, HTTPException, Body, Response, status
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from typing import List, Optional, Dict, Any
 from datetime import datetime, timezone
@@ -9,7 +11,7 @@ import db
 app = FastAPI(
     title="LaundryLab Multi-Branch API",
     description="Backend API for 6 Laundry Mat branches with 4 Washing Machines each (backed by Supabase PostgreSQL).",
-    version="2.0.0"
+    version="2.1.0"
 )
 
 app.add_middleware(
@@ -21,6 +23,90 @@ app.add_middleware(
 )
 
 STATE_FILE = os.path.join(os.path.dirname(__file__), "laundry_state.json")
+
+# Standardized User Accounts (Owner: Mpho, updated Operators)
+ACCOUNTS = {
+    "towers@laundrylab.com": {
+        "id": "usr-absa",
+        "name": "Nokulunga",
+        "role": "Operator",
+        "assignedBranch": "Absa Towers",
+        "email": "towers@laundrylab.com",
+        "password": "Towers@2026"
+    },
+    "encore@laundrylab.com": {
+        "id": "usr-encore",
+        "name": "Smiso",
+        "role": "Operator",
+        "assignedBranch": "The Encore",
+        "email": "encore@laundrylab.com",
+        "password": "Encore@2026"
+    },
+    "zuri@laundrylab.com": {
+        "id": "usr-zuri",
+        "name": "Ntombi",
+        "role": "Operator",
+        "assignedBranch": "Zuri",
+        "email": "zuri@laundrylab.com",
+        "password": "Zuri@2026"
+    },
+    "nala@laundrylab.com": {
+        "id": "usr-nala",
+        "name": "Nokulunga",
+        "role": "Operator",
+        "assignedBranch": "Nala",
+        "email": "nala@laundrylab.com",
+        "password": "Nala@2026"
+    },
+    "georgia@laundrylab.com": {
+        "id": "usr-georgia",
+        "name": "Unassigned",
+        "role": "Operator",
+        "assignedBranch": "Georgia",
+        "email": "georgia@laundrylab.com",
+        "password": "Georgia@2026"
+    },
+    "centurion@laundrylab.com": {
+        "id": "usr-centurion",
+        "name": "Unassigned",
+        "role": "Operator",
+        "assignedBranch": "Centurion",
+        "email": "centurion@laundrylab.com",
+        "password": "Centurion@2026"
+    },
+    "mpho@laundylab.com": {
+        "id": "usr-admin",
+        "name": "Mpho (Owner)",
+        "role": "Owner",
+        "assignedBranch": "All Branches",
+        "email": "mpho@laundylab.com",
+        "password": "Mpho@2026"
+    }
+}
+
+@app.on_event("startup")
+def init_db_tables():
+    """Attempts direct PostgreSQL initialization for user_sessions if direct DB access is available."""
+    db_url = os.getenv("DATABASE_URL")
+    if db_url:
+        try:
+            import psycopg2
+            conn = psycopg2.connect(db_url, connect_timeout=5)
+            with conn.cursor() as cur:
+                cur.execute("""
+                    CREATE TABLE IF NOT EXISTS user_sessions (
+                        email VARCHAR(150) PRIMARY KEY,
+                        session_token VARCHAR(100) NOT NULL,
+                        device_name VARCHAR(150),
+                        is_active BOOLEAN DEFAULT TRUE,
+                        last_heartbeat TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+                    );
+                """)
+            conn.commit()
+            conn.close()
+            print("Successfully initialized user_sessions table in Supabase PostgreSQL")
+        except Exception as e:
+            print(f"PostgreSQL direct table init bypassed: {e}")
 
 def reconcile_machines_with_orders(machines_dict: Dict[str, List[Dict[str, Any]]], orders: List[Dict[str, Any]]):
     """Ensures machines accurately reflect any active in-progress wash cycles."""
@@ -51,17 +137,123 @@ def reconcile_machines_with_orders(machines_dict: Dict[str, List[Dict[str, Any]]
                 pass
 
 def get_current_state_from_db() -> Dict[str, Any]:
-    # 1. Fetch from Supabase
     orders = db.fetch_orders()
     machines = db.fetch_machines_by_branch()
-
-    # If Supabase machines are empty, populate fallback machines
     if not machines:
         machines = {}
-
-    # Ensure machines are reconciled with running orders
     reconcile_machines_with_orders(machines, orders)
     return {"orders": orders, "machines": machines}
+
+# ----------------- AUTH & CONCURRENT SESSION LOCKING -----------------
+
+@app.post("/api/auth/login")
+def auth_login(payload: Dict[str, Any] = Body(...)):
+    email = payload.get("email", "").lower().strip()
+    password = payload.get("password", "").strip()
+    device_name = payload.get("deviceName", "Browser / Mobile")
+
+    account = ACCOUNTS.get(email)
+    if not account or account["password"] != password:
+        raise HTTPException(status_code=401, detail="Invalid email or password. Please try again.")
+
+    # Check for active existing session (First-device priority rule)
+    existing_session = db.get_active_session(email)
+    if existing_session and existing_session.get("is_active"):
+        last_hb = existing_session.get("last_heartbeat")
+        if last_hb:
+            try:
+                hb_dt = datetime.fromisoformat(str(last_hb).replace("Z", "+00:00"))
+                now_dt = datetime.now(timezone.utc) if hb_dt.tzinfo else datetime.now()
+                diff_sec = (now_dt - hb_dt).total_seconds()
+                
+                # If active heartbeat within the last 90 seconds, reject the 2nd device
+                if diff_sec < 90:
+                    device_desc = existing_session.get("device_name") or "another station device"
+                    return JSONResponse(
+                        status_code=409,
+                        content={
+                            "error": "CONCURRENT_SESSION_LOCKED",
+                            "message": f"This account is currently active on {device_desc}. Preference is given to the first device. Please log out on that device first, or contact management to release the session lock."
+                        }
+                    )
+            except Exception:
+                pass
+
+    # Grant login to this device and lock the seat
+    new_token = str(uuid.uuid4())
+    db.save_active_session(email, new_token, device_name)
+
+    user_info = {
+        "id": account["id"],
+        "name": account["name"],
+        "role": account["role"],
+        "assignedBranch": account["assignedBranch"],
+        "email": account["email"]
+    }
+    return {
+        "success": True,
+        "user": user_info,
+        "sessionToken": new_token
+    }
+
+@app.post("/api/auth/heartbeat")
+def auth_heartbeat(payload: Dict[str, Any] = Body(...)):
+    email = payload.get("email", "").lower().strip()
+    token = payload.get("sessionToken", "").strip()
+    if not email or not token:
+        return {"valid": False, "reason": "missing_credentials"}
+
+    current = db.get_active_session(email)
+    if not current or not current.get("is_active"):
+        return {"valid": False, "reason": "session_inactive"}
+
+    if current.get("session_token") != token:
+        return {"valid": False, "reason": "superseded_or_locked"}
+
+    db.update_session_heartbeat(email, token)
+    return {"valid": True}
+
+@app.post("/api/auth/logout")
+def auth_logout(payload: Dict[str, Any] = Body(...)):
+    email = payload.get("email", "").lower().strip()
+    token = payload.get("sessionToken", "").strip()
+    current = db.get_active_session(email)
+    if current and current.get("session_token") == token:
+        db.clear_session(email)
+    return {"success": True}
+
+@app.post("/api/auth/admin-force-unlock")
+def admin_force_unlock(payload: Dict[str, Any] = Body(...)):
+    """Allows Owner/Admin to unlock any branch if tablet was shut down without logging out."""
+    email = payload.get("email", "").lower().strip()
+    db.clear_session(email)
+    return {"success": True, "message": f"Session lock successfully released for {email}"}
+
+@app.get("/api/auth/sessions")
+def get_all_sessions():
+    """Returns all session statuses for Owner administration overview."""
+    sessions = db.get_all_active_sessions()
+    now_dt = datetime.now(timezone.utc)
+    results = []
+    for s in sessions:
+        is_live = False
+        last_hb = s.get("last_heartbeat")
+        if last_hb and s.get("is_active"):
+            try:
+                hb_dt = datetime.fromisoformat(str(last_hb).replace("Z", "+00:00"))
+                if (now_dt - hb_dt).total_seconds() < 90:
+                    is_live = True
+            except Exception:
+                pass
+        results.append({
+            "email": s.get("email"),
+            "deviceName": s.get("device_name"),
+            "isActive": is_live,
+            "lastHeartbeat": last_hb
+        })
+    return {"sessions": results}
+
+# ----------------- STANDARD LAUNDRYLAB ENDPOINTS -----------------
 
 @app.get("/api/health")
 def health_check():
@@ -76,14 +268,13 @@ def health_check():
 def get_branches():
     branches = db.fetch_branches()
     if not branches:
-        # Fallback list of 6 branches
         branches = [
-            {"name": "Absa Towers", "address": "Ground Floor, Absa Towers Main", "machines_count": 4, "operator": "Clyde"},
-            {"name": "Zuri", "address": "Ground Floor, Zuri Towers", "machines_count": 4, "operator": "Nkateko"},
-            {"name": "Nala", "address": "Ground Floor, Nala Suites", "machines_count": 4, "operator": "Skhathi"},
-            {"name": "The Encore", "address": "Ground Floor, The Encore Plaza", "machines_count": 4, "operator": "Mpho"},
-            {"name": "Georgia", "address": "Ground Floor, Georgia House", "machines_count": 4, "operator": "Pops"},
-            {"name": "Centurion", "address": "Ground Floor, Centurion Center", "machines_count": 4, "operator": "Kairo"},
+            {"name": "Absa Towers", "address": "Ground Floor, Absa Towers Main", "machines_count": 4, "operator": "Nokulunga"},
+            {"name": "Zuri", "address": "Ground Floor, Zuri Towers", "machines_count": 4, "operator": "Ntombi"},
+            {"name": "Nala", "address": "Ground Floor, Nala Suites", "machines_count": 4, "operator": "Nokulunga"},
+            {"name": "The Encore", "address": "Ground Floor, The Encore Plaza", "machines_count": 4, "operator": "Smiso"},
+            {"name": "Georgia", "address": "Ground Floor, Georgia House", "machines_count": 4, "operator": "Unassigned"},
+            {"name": "Centurion", "address": "Ground Floor, Centurion Center", "machines_count": 4, "operator": "Unassigned"},
         ]
     return {"branches": branches}
 
@@ -98,7 +289,6 @@ def update_state(payload: Dict[str, Any] = Body(...)):
     if "machines" in payload and isinstance(payload["machines"], dict):
         db.update_machines(payload["machines"])
 
-    # Also mirror to local file backup
     try:
         with open(STATE_FILE, "w", encoding="utf-8") as f:
             json.dump(payload, f, indent=2)
