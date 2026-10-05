@@ -15,7 +15,8 @@ import {
   Eye,
   ShieldCheck,
   Check,
-  AlertCircle
+  AlertCircle,
+  User
 } from 'lucide-react';
 import { ProofOfPaymentModal } from '../components/modals/ProofOfPaymentModal';
 import { Order, BranchName } from '../types/laundry';
@@ -83,7 +84,7 @@ export const AdminPortal: React.FC = () => {
   };
 
   const handleQuickApprovePop = (orderId: string) => {
-    verifyProofOfPayment(orderId, 'David Vance (Owner)');
+    verifyProofOfPayment(orderId, 'Mpho (Owner)');
   };
 
   return (
@@ -234,12 +235,28 @@ export const AdminPortal: React.FC = () => {
 
         <div style={{ 
           display: 'grid', 
-          gridTemplateColumns: 'repeat(3, 1fr)', 
+          gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', 
           gap: '16px' 
         }}>
           {BRANCHES.map(branch => {
             const bOrders = orders.filter(o => o.branch === branch.name);
-            const bRevenue = bOrders.reduce((sum, o) => sum + o.amount, 0);
+            const bTotalRevenue = bOrders.reduce((sum, o) => sum + o.amount, 0);
+
+            // Paid on Counter (Speed Point / Cash)
+            const bCounterRevenue = bOrders
+              .filter(o => o.paymentMethod === 'Speed Point/Cash(Paid at Counter)' || o.paymentStatus === 'Paid (Counter)')
+              .reduce((sum, o) => sum + o.amount, 0);
+
+            // EFT / PayShap total
+            const bEftRevenue = bOrders
+              .filter(o => o.paymentMethod === 'Pay Later (EFT / PayShap / Proof of Payment)' || o.paymentStatus === 'Paid (EFT/PayShap Verified)' || o.paymentStatus.includes('POP'))
+              .reduce((sum, o) => sum + o.amount, 0);
+
+            // EFT verified vs pending
+            const bEftPending = bOrders
+              .filter(o => o.paymentMethod === 'Pay Later (EFT / PayShap / Proof of Payment)' && o.paymentStatus !== 'Paid (EFT/PayShap Verified)')
+              .reduce((sum, o) => sum + o.amount, 0);
+
             const bMachines = machines[branch.name] || [];
             const activeCount = bMachines.filter(m => m.status === 'In Use').length;
 
@@ -248,42 +265,103 @@ export const AdminPortal: React.FC = () => {
                 key={branch.name} 
                 className="glass-card" 
                 style={{ 
-                  padding: '18px 20px', 
+                  padding: '20px', 
                   borderRadius: '16px',
                   display: 'flex',
                   flexDirection: 'column',
                   justifyContent: 'space-between',
-                  minHeight: '135px'
+                  boxShadow: '0 4px 16px rgba(0,0,0,0.04)',
+                  border: '1px solid var(--border-color)'
                 }}
               >
                 <div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                    <h4 style={{ margin: 0, color: 'var(--text-main)', fontSize: '16px', fontWeight: 700 }}>
-                      {branch.name}
-                    </h4>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '4px' }}>
+                    <div>
+                      <h4 style={{ margin: 0, color: 'var(--text-main)', fontSize: '17px', fontWeight: 700 }}>
+                        {branch.name}
+                      </h4>
+                      <p style={{ margin: '3px 0 0 0', fontSize: '12px', color: 'var(--text-muted)' }}>
+                        {branch.address}
+                      </p>
+                    </div>
                     <span 
                       style={{ 
-                        fontSize: '11.5px', 
+                        fontSize: '11px', 
                         fontWeight: 700, 
-                        background: '#ecfdf5', 
-                        color: '#047857', 
-                        border: '1px solid #a7f3d0',
+                        background: activeCount > 0 ? '#ecfdf5' : 'rgba(255,255,255,0.06)', 
+                        color: activeCount > 0 ? '#047857' : 'var(--text-secondary)', 
+                        border: activeCount > 0 ? '1px solid #a7f3d0' : '1px solid var(--border-color)',
                         padding: '4px 10px', 
-                        borderRadius: '20px' 
+                        borderRadius: '20px',
+                        whiteSpace: 'nowrap'
                       }}
                     >
-                      {activeCount}/4 Washing Machines Active
+                      {activeCount}/4 Active
                     </span>
                   </div>
 
-                  <p style={{ margin: '0 0 14px 0', fontSize: '12px', color: 'var(--text-muted)' }}>
-                    {branch.address}
-                  </p>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11.5px', color: 'var(--text-secondary)', marginTop: '6px', marginBottom: '14px' }}>
+                    <User size={13} style={{ color: 'var(--primary-light)' }} />
+                    <span>Station Operator: <strong>{branch.operatorName || 'Unassigned'}</strong></span>
+                  </div>
+
+                  {/* Payment Breakdown Box */}
+                  <div style={{ 
+                    background: 'rgba(255,255,255,0.02)', 
+                    border: '1px solid var(--border-subtle)', 
+                    borderRadius: '10px', 
+                    padding: '10px 14px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '8px',
+                    marginBottom: '12px'
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12.5px' }}>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-secondary)' }}>
+                        <CreditCard size={14} style={{ color: 'var(--success)' }} /> Paid on Counter (POS/Cash)
+                      </span>
+                      <strong style={{ color: 'var(--success)', fontWeight: 700 }}>
+                        R{bCounterRevenue.toFixed(2)}
+                      </strong>
+                    </div>
+
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12.5px' }}>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-secondary)' }}>
+                        <Smartphone size={14} style={{ color: '#a855f7' }} /> EFT & PayShap
+                      </span>
+                      <div style={{ textAlign: 'right' }}>
+                        <strong style={{ color: '#c084fc', fontWeight: 700 }}>
+                          R{bEftRevenue.toFixed(2)}
+                        </strong>
+                        {bEftPending > 0 && (
+                          <div style={{ fontSize: '10px', color: 'var(--warning)', marginTop: '-1px' }}>
+                            (R{bEftPending.toFixed(2)} pending POP)
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '13px', paddingTop: '10px', borderTop: '1px solid var(--border-subtle)' }}>
-                  <span>Orders: <strong>{bOrders.length}</strong></span>
-                  <span>Intake: <strong style={{ color: 'var(--success)', fontWeight: 700 }}>R{bRevenue.toFixed(2)}</strong></span>
+                {/* Footer: Order count & Total Branch Intake */}
+                <div style={{ 
+                  display: 'flex', 
+                  justifyContent: 'space-between', 
+                  alignItems: 'center', 
+                  fontSize: '13px', 
+                  paddingTop: '10px', 
+                  borderTop: '1px solid var(--border-subtle)',
+                  marginTop: '4px'
+                }}>
+                  <span style={{ color: 'var(--text-muted)' }}>
+                    Orders: <strong style={{ color: 'var(--text-main)', fontSize: '14px' }}>{bOrders.length}</strong>
+                  </span>
+                  <div style={{ textAlign: 'right' }}>
+                    <span style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'block' }}>Total Branch Intake</span>
+                    <strong style={{ color: 'var(--primary-light)', fontSize: '16px', fontWeight: 800 }}>
+                      R{bTotalRevenue.toFixed(2)}
+                    </strong>
+                  </div>
                 </div>
               </div>
             );
