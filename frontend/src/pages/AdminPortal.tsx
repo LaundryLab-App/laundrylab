@@ -447,27 +447,31 @@ export const AdminPortal: React.FC = () => {
                       {isPopPending ? (
                         <button 
                           className="btn btn-primary"
-                          style={{ minHeight: '38px', padding: '8px 14px', fontSize: '13px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '6px', borderRadius: '8px', whiteSpace: 'nowrap' }}
+                          style={{ minHeight: '36px', padding: '6px 14px', fontSize: '12.5px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '6px', borderRadius: '8px', whiteSpace: 'nowrap' }}
                           onClick={() => setSelectedPopOrder(o)}
                         >
-                          <Eye size={14} /> Review POP
+                          <ShieldCheck size={14} /> Review POP
                         </button>
                       ) : isPaidCounter ? (
+                        <span style={{ color: '#047857', fontSize: '12px', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                          <CheckCircle2 size={13} /> Settled at Till
+                        </span>
+                      ) : o.paymentStatus === 'Paid (EFT/PayShap Verified)' && o.proofOfPayment?.fileData ? (
                         <button 
                           className="btn btn-outline"
-                          style={{ minHeight: '38px', padding: '8px 14px', fontSize: '13px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px', borderRadius: '8px', whiteSpace: 'nowrap' }}
+                          style={{ minHeight: '36px', padding: '6px 12px', fontSize: '12.5px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px', borderRadius: '8px', whiteSpace: 'nowrap' }}
                           onClick={() => setSelectedPopOrder(o)}
                         >
-                          <FileCheck size={14} style={{ color: 'var(--success)' }} /> Order Receipt
+                          <Eye size={13} /> View POP Slip
                         </button>
+                      ) : o.paymentStatus === 'Paid (EFT/PayShap Verified)' ? (
+                        <span style={{ color: '#047857', fontSize: '12px', fontWeight: 600 }}>
+                          ✓ Verified EFT
+                        </span>
                       ) : (
-                        <button 
-                          className="btn btn-outline"
-                          style={{ minHeight: '38px', padding: '8px 14px', fontSize: '13px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px', borderRadius: '8px', whiteSpace: 'nowrap' }}
-                          onClick={() => setSelectedPopOrder(o)}
-                        >
-                          <Eye size={14} /> View Details
-                        </button>
+                        <span style={{ color: 'var(--warning)', fontSize: '12px', fontWeight: 600 }}>
+                          Awaiting Customer POP
+                        </span>
                       )}
                     </td>
                   </tr>
