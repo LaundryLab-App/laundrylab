@@ -41,6 +41,7 @@ export const ProofOfPaymentModal: React.FC<ProofOfPaymentModalProps> = ({
 
   const pop = order.proofOfPayment;
   const isPaid = order.paymentStatus.startsWith('Paid');
+  const isPaidCounter = order.paymentStatus === 'Paid (Counter)' || order.paymentMethod === 'Speed Point/Cash(Paid at Counter)';
   const isPopPending = order.paymentStatus === 'POP Uploaded (Pending Verification)';
 
   const handleApprove = () => {
@@ -86,9 +87,11 @@ export const ProofOfPaymentModal: React.FC<ProofOfPaymentModalProps> = ({
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <FileCheck size={22} className="text-primary" />
             <div>
-              <h3 style={{ margin: 0 }}>Proof of Payment (POP) Details</h3>
-              <span style={{ fontSize: '12px', color: canVerify ? 'var(--brand-accent)' : 'var(--text-muted)' }}>
-                {canVerify ? 'Review & Verification Mode' : 'Staff View (Verification by Management)'}
+              <h3 style={{ margin: 0 }}>
+                {isPaidCounter ? 'Order & Payment Receipt' : pop ? 'Proof of Payment (POP) Details' : 'Order Payment Details'}
+              </h3>
+              <span style={{ fontSize: '12px', color: isPaidCounter ? '#059669' : canVerify ? 'var(--brand-accent)' : 'var(--text-muted)', fontWeight: isPaidCounter ? 600 : 400 }}>
+                {isPaidCounter ? 'Direct Counter Settlement (SpeedPoint / Cash)' : canVerify ? 'Review & Verification Mode' : 'Staff View (Verification by Management)'}
               </span>
             </div>
           </div>
@@ -215,6 +218,22 @@ export const ProofOfPaymentModal: React.FC<ProofOfPaymentModalProps> = ({
                 <CheckCircle2 size={16} /> Verified by <strong>{pop.verifiedBy || 'Owner'}</strong> at {pop.verifiedAt || 'Earlier'}
               </div>
             )}
+          </div>
+        ) : isPaidCounter ? (
+          <div style={{ padding: '24px 20px', background: 'var(--success-light)', color: '#047857', borderRadius: '12px', textAlign: 'center', marginBottom: '20px', border: '1px solid #a7f3d0' }}>
+            <CheckCircle2 size={36} style={{ display: 'block', margin: '0 auto 10px auto', color: '#059669' }} />
+            <strong style={{ fontSize: '16px' }}>Settled at Branch Counter</strong>
+            <p style={{ fontSize: '13px', marginTop: '6px', color: '#065f46', lineHeight: 1.5, marginBottom: 0 }}>
+              This order was fully paid and settled in person at the <strong>{order.branch}</strong> counter via SpeedPoint card machine or cash. No electronic Proof of Payment (POP) upload is required.
+            </p>
+          </div>
+        ) : isPaid ? (
+          <div style={{ padding: '24px 20px', background: 'var(--success-light)', color: '#047857', borderRadius: '12px', textAlign: 'center', marginBottom: '20px', border: '1px solid #a7f3d0' }}>
+            <CheckCircle2 size={36} style={{ display: 'block', margin: '0 auto 10px auto', color: '#059669' }} />
+            <strong style={{ fontSize: '16px' }}>Payment Verified & Settled</strong>
+            <p style={{ fontSize: '13px', marginTop: '6px', color: '#065f46', lineHeight: 1.5, marginBottom: 0 }}>
+              Payment has been verified and settled.
+            </p>
           </div>
         ) : (
           <div style={{ padding: '20px', background: 'var(--warning-light)', color: '#b45309', borderRadius: '12px', textAlign: 'center', marginBottom: '20px', fontSize: '14px' }}>

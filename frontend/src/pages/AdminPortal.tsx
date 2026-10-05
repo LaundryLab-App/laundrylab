@@ -16,7 +16,8 @@ import {
   ShieldCheck,
   Check,
   AlertCircle,
-  User
+  User,
+  FileCheck
 } from 'lucide-react';
 import { ProofOfPaymentModal } from '../components/modals/ProofOfPaymentModal';
 import { Order, BranchName } from '../types/laundry';
@@ -421,6 +422,7 @@ export const AdminPortal: React.FC = () => {
             <tbody>
               {filteredOrders.map(o => {
                 const isPaid = o.paymentStatus.startsWith('Paid');
+                const isPaidCounter = o.paymentStatus === 'Paid (Counter)' || o.paymentMethod === 'Speed Point/Cash(Paid at Counter)';
                 const isPopPending = o.paymentStatus === 'POP Uploaded (Pending Verification)';
 
                 return (
@@ -450,6 +452,14 @@ export const AdminPortal: React.FC = () => {
                         >
                           <Eye size={14} /> Review POP
                         </button>
+                      ) : isPaidCounter ? (
+                        <button 
+                          className="btn btn-outline"
+                          style={{ minHeight: '38px', padding: '8px 14px', fontSize: '13px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px', borderRadius: '8px', whiteSpace: 'nowrap' }}
+                          onClick={() => setSelectedPopOrder(o)}
+                        >
+                          <FileCheck size={14} style={{ color: 'var(--success)' }} /> Order Receipt
+                        </button>
                       ) : (
                         <button 
                           className="btn btn-outline"
@@ -473,7 +483,7 @@ export const AdminPortal: React.FC = () => {
         isOpen={!!selectedPopOrder}
         order={selectedPopOrder}
         onClose={() => setSelectedPopOrder(null)}
-        staffName="David Vance (Owner)"
+        staffName="Mpho (Owner)"
         canVerify={true}
       />
     </div>
