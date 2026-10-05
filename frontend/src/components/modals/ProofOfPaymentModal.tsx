@@ -30,7 +30,7 @@ export const ProofOfPaymentModal: React.FC<ProofOfPaymentModalProps> = ({
   order,
   isOpen,
   onClose,
-  staffName = 'David Vance (Owner)',
+  staffName = 'Mpho (Owner)',
   canVerify = false
 }) => {
   const { verifyProofOfPayment, rejectProofOfPayment, updatePaymentStatus, showToast } = useLaundry();

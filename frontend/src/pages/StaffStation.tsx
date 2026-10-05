@@ -176,6 +176,7 @@ export const StaffStation: React.FC = () => {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 {activeWashes.map(order => {
                   const isPaid = order.paymentStatus.startsWith('Paid');
+                  const isPaidCounter = order.paymentStatus === 'Paid (Counter)' || order.paymentMethod === 'Speed Point/Cash(Paid at Counter)';
                   const isPopPending = order.paymentStatus === 'POP Uploaded (Pending Verification)';
                   const isPopRejected = order.paymentStatus === 'POP Rejected (Re-upload Required)';
                   
@@ -220,20 +221,40 @@ export const StaffStation: React.FC = () => {
                         {order.weightOrQty} {order.unit} {order.serviceName} | Machine: <strong>{order.machineCode}</strong>
                       </p>
 
-                      {/* Payment Status Pill with POP Action */}
+                      {/* Payment Status Pill with Conditional POP Action */}
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '8px 0', padding: '6px 10px', background: isPaid ? 'var(--success-light)' : isPopRejected ? 'var(--danger-light)' : isPopPending ? '#eff6ff' : 'var(--warning-light)', borderRadius: '8px', fontSize: '12px' }}>
                         <span style={{ fontWeight: 600, color: isPaid ? '#047857' : isPopRejected ? '#b91c1c' : isPopPending ? '#1d4ed8' : '#b45309', display: 'flex', alignItems: 'center', gap: '4px' }}>
                           {isPaid ? <CheckCircle2 size={13} /> : isPopRejected ? <AlertTriangle size={13} /> : isPopPending ? <Clock size={13} /> : <AlertCircle size={13} />}
                           Payment: {isPopRejected ? 'POP Rejected (Re-upload Needed)' : isPopPending ? 'POP Uploaded (Awaiting Verification)' : order.paymentStatus}
                         </span>
 
-                        <button 
-                          className="btn btn-outline" 
-                          style={{ padding: '6px 12px', fontSize: '12px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px', background: '#ffffff', borderRadius: '6px' }}
-                          onClick={() => setSelectedPopOrder(order)}
-                        >
-                          <Eye size={13} /> {isPopPending ? 'View POP' : isPopRejected ? 'Rejection Info' : 'Payment / POP'}
-                        </button>
+                        {isPaidCounter ? (
+                          <span style={{ fontSize: '11px', color: '#047857', fontWeight: 600, background: '#ffffff', padding: '3px 8px', borderRadius: '6px', border: '1px solid #a7f3d0' }}>
+                            ✓ Settled at Counter
+                          </span>
+                        ) : isPaid ? (
+                          order.proofOfPayment?.fileData ? (
+                            <button 
+                              className="btn btn-outline" 
+                              style={{ padding: '5px 10px', fontSize: '11.5px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px', background: '#ffffff', borderRadius: '6px' }}
+                              onClick={() => setSelectedPopOrder(order)}
+                            >
+                              <Eye size={12} /> View Receipt
+                            </button>
+                          ) : (
+                            <span style={{ fontSize: '11px', color: '#047857', fontWeight: 600, background: '#ffffff', padding: '3px 8px', borderRadius: '6px', border: '1px solid #a7f3d0' }}>
+                              ✓ Verified EFT
+                            </span>
+                          )
+                        ) : (
+                          <button 
+                            className="btn btn-outline" 
+                            style={{ padding: '5px 10px', fontSize: '11.5px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px', background: '#ffffff', borderRadius: '6px' }}
+                            onClick={() => setSelectedPopOrder(order)}
+                          >
+                            {isPopPending ? <><Eye size={12} /> View POP</> : isPopRejected ? <><AlertTriangle size={12} /> Rejection Info</> : <><CreditCard size={12} /> Settle / POP</>}
+                          </button>
+                        )}
                       </div>
 
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '10px', fontSize: '13px', flexWrap: 'wrap', gap: '8px' }}>
