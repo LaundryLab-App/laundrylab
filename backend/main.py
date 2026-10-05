@@ -285,7 +285,22 @@ def get_state():
 @app.post("/api/state")
 def update_state(payload: Dict[str, Any] = Body(...)):
     if "orders" in payload and isinstance(payload["orders"], list):
-        db.upsert_orders(payload["orders"])
+        # Fetch current DB state to prevent stale client snapshots from regressing verified or rejected payment statuses
+        existing_orders = {str(o.get("id")): o for o in db.fetch_orders()}
+        merged_orders = []
+        for incoming in payload["orders"]:
+            inc_id = str(incoming.get("id"))
+            existing = existing_orders.get(inc_id)
+            if existing:
+                db_status = str(existing.get("paymentStatus") or "")
+                inc_status = str(incoming.get("paymentStatus") or "")
+                # If DB has Rejected or Verified, never let a stale client regress it to pending or unpaid
+                if ("Rejected" in db_status or "Verified" in db_status) and inc_status != db_status:
+                    incoming["paymentStatus"] = existing.get("paymentStatus")
+                    incoming["proofOfPayment"] = existing.get("proofOfPayment")
+            merged_orders.append(incoming)
+        db.upsert_orders(merged_orders)
+
     if "machines" in payload and isinstance(payload["machines"], dict):
         db.update_machines(payload["machines"])
 
@@ -296,6 +311,31 @@ def update_state(payload: Dict[str, Any] = Body(...)):
         pass
 
     return {"success": True, "ordersCount": len(payload.get("orders", []))}
+
+@app.post("/api/orders")
+def create_order(payload: Dict[str, Any] = Body(...)):
+    db.upsert_orders([payload])
+    return {"success": True, "order": payload}
+
+@app.patch("/api/orders/{order_id}")
+def update_order(order_id: str, payload: Dict[str, Any] = Body(...)):
+    clean_id = str(order_id).strip().replace(" ", "").replace("#", "")
+    orders = db.fetch_orders()
+    target_order = None
+    for o in orders:
+        if str(o.get("id")) == clean_id:
+            target_order = o
+            break
+    if not target_order:
+        raise HTTPException(status_code=404, detail="Order not found")
+    target_order.update(payload)
+    db.upsert_orders([target_order])
+    return {"success": True, "order": target_order}
+
+@app.post("/api/machines")
+def save_machines(payload: Dict[str, Any] = Body(...)):
+    db.update_machines(payload)
+    return {"success": True}
 
 @app.get("/api/orders", response_model=List[Dict])
 def get_orders(branch: Optional[str] = None):

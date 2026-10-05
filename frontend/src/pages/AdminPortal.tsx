@@ -17,7 +17,8 @@ import {
   Check,
   AlertCircle,
   User,
-  FileCheck
+  FileCheck,
+  RotateCcw
 } from 'lucide-react';
 import { ProofOfPaymentModal } from '../components/modals/ProofOfPaymentModal';
 import { Order, BranchName } from '../types/laundry';
@@ -424,6 +425,7 @@ export const AdminPortal: React.FC = () => {
                 const isPaid = o.paymentStatus.startsWith('Paid');
                 const isPaidCounter = o.paymentStatus === 'Paid (Counter)' || o.paymentMethod === 'Speed Point/Cash(Paid at Counter)';
                 const isPopPending = o.paymentStatus === 'POP Uploaded (Pending Verification)';
+                const isPopRejected = o.paymentStatus === 'POP Rejected (Re-upload Required)' || !!o.proofOfPayment?.rejected;
 
                 return (
                   <tr key={o.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
@@ -438,9 +440,15 @@ export const AdminPortal: React.FC = () => {
                     <td style={{ padding: '12px' }}>{o.serviceName} ({o.weightOrQty} {o.unit})</td>
                     <td style={{ padding: '12px' }}>{o.totalItemCount} items</td>
                     <td style={{ padding: '12px' }}>
-                      <span className={`badge ${isPaid ? 'badge-available' : isPopPending ? 'badge-in-use' : 'badge-completed'}`}>
-                        {o.paymentStatus}
-                      </span>
+                      {isPopRejected ? (
+                        <span className="badge" style={{ background: '#fee2e2', color: '#b91c1c', border: '1px solid #fca5a5' }}>
+                          POP Rejected
+                        </span>
+                      ) : (
+                        <span className={`badge ${isPaid ? 'badge-available' : isPopPending ? 'badge-in-use' : 'badge-completed'}`}>
+                          {o.paymentStatus}
+                        </span>
+                      )}
                     </td>
                     <td style={{ padding: '12px', fontWeight: 700, color: 'var(--success)' }}>R{o.amount.toFixed(2)}</td>
                     <td style={{ padding: '12px' }}>
@@ -451,6 +459,14 @@ export const AdminPortal: React.FC = () => {
                           onClick={() => setSelectedPopOrder(o)}
                         >
                           <ShieldCheck size={14} /> Review POP
+                        </button>
+                      ) : isPopRejected ? (
+                        <button 
+                          className="btn btn-outline"
+                          style={{ minHeight: '36px', padding: '6px 12px', fontSize: '12px', fontWeight: 600, color: '#dc2626', borderColor: '#fca5a5', display: 'flex', alignItems: 'center', gap: '6px', borderRadius: '8px', whiteSpace: 'nowrap' }}
+                          onClick={() => setSelectedPopOrder(o)}
+                        >
+                          <RotateCcw size={13} /> View Rejected POP
                         </button>
                       ) : isPaidCounter ? (
                         <span style={{ color: '#047857', fontSize: '12px', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>

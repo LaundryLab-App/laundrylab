@@ -51,7 +51,7 @@ export const CustomerPortal: React.FC = () => {
   const [searchError, setSearchError] = useState<string | null>(null);
 
   const matchedOrder = orders.find(o => o.id === (orderId || ''));
-  const order = matchedOrder || directOrder;
+  const order = directOrder || matchedOrder;
 
   useEffect(() => {
     if (orderId) {

@@ -99,8 +99,8 @@ interface LaundryContextType {
   updateOrderStatus: (orderId: string, status: OrderStatus) => void;
   updatePaymentStatus: (orderId: string, status: PaymentStatus, method?: PaymentMethod) => void;
   submitProofOfPayment: (orderId: string, pop: Omit<ProofOfPayment, 'verified' | 'verifiedAt' | 'verifiedBy'>) => void;
-  verifyProofOfPayment: (orderId: string, verifiedBy?: string) => void;
-  rejectProofOfPayment: (orderId: string, reason?: string, rejectedBy?: string) => void;
+  verifyProofOfPayment: (orderId: string, verifiedBy?: string) => Promise<any> | void;
+  rejectProofOfPayment: (orderId: string, reason?: string, rejectedBy?: string) => Promise<any> | void;
   customerSignoffGarments: (orderId: string, itemBreakdownMatch: boolean) => void;
   getBranchOrders: (branchName?: BranchName) => Order[];
   getBranchMachines: (branchName?: BranchName) => Machine[];
@@ -182,15 +182,6 @@ export const LaundryProvider: React.FC<{ children: React.ReactNode }> = ({ child
     };
   }, []);
 
-  // Push state updates directly to backend DB (no localStorage writes)
-  useEffect(() => {
-    fetch('/api/state', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ orders, machines })
-    }).catch(() => {});
-  }, [orders, machines]);
-
   const showToast = (text: string, type: 'success' | 'error' = 'success') => {
     setToastMessage({ text, type });
     setTimeout(() => setToastMessage(null), 4000);
@@ -209,6 +200,12 @@ export const LaundryProvider: React.FC<{ children: React.ReactNode }> = ({ child
     };
 
     setOrders(prev => [newOrder, ...prev]);
+
+    fetch('/api/orders', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newOrder)
+    }).catch(() => {});
 
     setMachines(prev => {
       const branchList = [...(prev[newOrder.branch] || [])];
@@ -258,6 +255,16 @@ export const LaundryProvider: React.FC<{ children: React.ReactNode }> = ({ child
       }
       return updatedOrders;
     });
+
+    fetch(`/api/orders/${orderId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        status: 'In Progress',
+        startedAt: startIso,
+        durationMinutes: durationMinutes
+      })
+    }).catch(() => {});
   };
 
   // Keep machines remaining times in sync with real elapsed time
@@ -337,6 +344,12 @@ export const LaundryProvider: React.FC<{ children: React.ReactNode }> = ({ child
       
       return updated;
     });
+
+    fetch(`/api/orders/${orderId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status })
+    }).catch(() => {});
     
     showToast(`Order #${orderId} status set to ${status}`);
   };
@@ -347,6 +360,16 @@ export const LaundryProvider: React.FC<{ children: React.ReactNode }> = ({ child
       paymentStatus,
       paymentMethod: method || o.paymentMethod
     } : o));
+
+    fetch(`/api/orders/${orderId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        paymentStatus,
+        ...(method ? { paymentMethod: method } : {})
+      })
+    }).catch(() => {});
+
     showToast(`Order #${orderId} payment updated to ${paymentStatus}`);
   };
 
@@ -370,6 +393,13 @@ export const LaundryProvider: React.FC<{ children: React.ReactNode }> = ({ child
       }
       return o;
     }));
+
+    fetch(`/api/orders/${orderId}/pop`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(popData)
+    }).catch(() => {});
+
     showToast(`Proof of payment uploaded for Order #${orderId}! Pending staff verification.`);
   };
 
@@ -394,7 +424,7 @@ export const LaundryProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }));
 
     // Directly persist to backend endpoint so background poller doesn't race
-    fetch(`/api/orders/${orderId}/verify`, {
+    return fetch(`/api/orders/${orderId}/verify`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ verifiedBy })
@@ -437,6 +467,16 @@ export const LaundryProvider: React.FC<{ children: React.ReactNode }> = ({ child
       }
       return updatedOrders;
     });
+
+    fetch(`/api/orders/${orderId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        status: 'Awaiting Start',
+        startedAt: null,
+        durationMinutes: null
+      })
+    }).catch(() => {});
   };
 
   const restartWashCycle = (orderId: string, durationMinutes: number) => {
@@ -474,8 +514,10 @@ export const LaundryProvider: React.FC<{ children: React.ReactNode }> = ({ child
       return o;
     }));
 
+    showToast(`POP rejected for Order #${orderId}: ${finalReason}. Customer notified to re-upload.`, 'error');
+
     // Directly persist to backend endpoint so background poller doesn't race
-    fetch(`/api/orders/${orderId}/reject`, {
+    return fetch(`/api/orders/${orderId}/reject`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ reason: finalReason, rejectedBy })
@@ -486,8 +528,6 @@ export const LaundryProvider: React.FC<{ children: React.ReactNode }> = ({ child
         }
       })
       .catch(() => {});
-
-    showToast(`POP rejected for Order #${orderId}: ${finalReason}. Customer notified to re-upload.`, 'error');
   };
 
   const customerSignoffGarments = (orderId: string, itemBreakdownMatch: boolean) => {
@@ -498,6 +538,16 @@ export const LaundryProvider: React.FC<{ children: React.ReactNode }> = ({ child
       customerSignedOff: itemBreakdownMatch,
       signedOffAt: nowStr
     } : o));
+
+    fetch(`/api/orders/${orderId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        status: 'Completed',
+        customerSignedOff: itemBreakdownMatch,
+        signedOffAt: nowStr
+      })
+    }).catch(() => {});
 
     const targetOrder = orders.find(o => o.id === orderId);
     if (targetOrder) {

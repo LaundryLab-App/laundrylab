@@ -218,6 +218,17 @@ export const ProofOfPaymentModal: React.FC<ProofOfPaymentModalProps> = ({
                 <CheckCircle2 size={16} /> Verified by <strong>{pop.verifiedBy || 'Owner'}</strong> at {pop.verifiedAt || 'Earlier'}
               </div>
             )}
+
+            {pop.rejected && (
+              <div style={{ marginTop: '14px', padding: '12px 14px', background: '#fef2f2', border: '1px solid #fecaca', color: '#b91c1c', borderRadius: '8px', fontSize: '13px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 700 }}>
+                  <AlertTriangle size={16} /> POP Rejected by {pop.rejectedBy || 'Management'} at {pop.rejectedAt || 'Earlier'}
+                </div>
+                <div style={{ color: '#7f1d1d', marginTop: '4px' }}>
+                  <strong>Reason:</strong> "{pop.rejectionReason || 'Receipt reference not matching statement or incorrect amount.'}"
+                </div>
+              </div>
+            )}
           </div>
         ) : isPaidCounter ? (
           <div style={{ padding: '24px 20px', background: 'var(--success-light)', color: '#047857', borderRadius: '12px', textAlign: 'center', marginBottom: '20px', border: '1px solid #a7f3d0' }}>
