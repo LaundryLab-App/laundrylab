@@ -190,29 +190,16 @@ def create_reconciliation(rec: Dict[str, Any]) -> bool:
         print(f"Error creating reconciliation in Supabase: {e}")
         return False
 
-# In-memory session fallback cache
+# In-memory high-speed session registry
 IN_MEMORY_SESSIONS: Dict[str, Dict[str, Any]] = {}
 
 def get_active_session(email: str) -> Optional[Dict[str, Any]]:
+    """Instant O(1) in-memory lookup for concurrent session locking."""
     clean_email = email.lower().strip()
-    try:
-        r = requests.get(f"{SUPABASE_URL}/rest/v1/user_sessions?email=eq.{clean_email}&select=*", headers=HEADERS, timeout=5)
-        if r.status_code == 200:
-            rows = r.json()
-            if rows:
-                row = rows[0]
-                return {
-                    "email": row["email"],
-                    "session_token": row["session_token"],
-                    "device_name": row.get("device_name", "Unknown Device"),
-                    "is_active": bool(row.get("is_active", True)),
-                    "last_heartbeat": row.get("last_heartbeat")
-                }
-    except Exception as e:
-        pass
     return IN_MEMORY_SESSIONS.get(clean_email)
 
 def save_active_session(email: str, session_token: str, device_name: str) -> bool:
+    """Instant in-memory session registration."""
     from datetime import datetime, timezone
     clean_email = email.lower().strip()
     now_iso = datetime.now(timezone.utc).isoformat()
@@ -224,15 +211,10 @@ def save_active_session(email: str, session_token: str, device_name: str) -> boo
         "last_heartbeat": now_iso
     }
     IN_MEMORY_SESSIONS[clean_email] = session_data
-
-    try:
-        headers = get_supabase_headers(upsert=True)
-        r = requests.post(f"{SUPABASE_URL}/rest/v1/user_sessions", headers=headers, json=session_data, timeout=5)
-        return r.status_code in (200, 201)
-    except Exception as e:
-        return True
+    return True
 
 def update_session_heartbeat(email: str, session_token: str) -> bool:
+    """Instant heartbeat update."""
     from datetime import datetime, timezone
     clean_email = email.lower().strip()
     now_iso = datetime.now(timezone.utc).isoformat()
@@ -240,40 +222,16 @@ def update_session_heartbeat(email: str, session_token: str) -> bool:
         if IN_MEMORY_SESSIONS[clean_email]["session_token"] == session_token:
             IN_MEMORY_SESSIONS[clean_email]["last_heartbeat"] = now_iso
             IN_MEMORY_SESSIONS[clean_email]["is_active"] = True
-
-    try:
-        r = requests.patch(
-            f"{SUPABASE_URL}/rest/v1/user_sessions?email=eq.{clean_email}&session_token=eq.{session_token}",
-            headers=HEADERS,
-            json={"last_heartbeat": now_iso, "is_active": True},
-            timeout=5
-        )
-        return r.status_code in (200, 204)
-    except Exception:
-        return True
+            return True
+    return False
 
 def clear_session(email: str) -> bool:
+    """Instant session release on logout."""
     clean_email = email.lower().strip()
     if clean_email in IN_MEMORY_SESSIONS:
         IN_MEMORY_SESSIONS[clean_email]["is_active"] = False
-
-    try:
-        r = requests.patch(
-            f"{SUPABASE_URL}/rest/v1/user_sessions?email=eq.{clean_email}",
-            headers=HEADERS,
-            json={"is_active": False},
-            timeout=5
-        )
-        return r.status_code in (200, 204)
-    except Exception:
-        return True
+    return True
 
 def get_all_active_sessions() -> List[Dict[str, Any]]:
-    try:
-        r = requests.get(f"{SUPABASE_URL}/rest/v1/user_sessions?select=*", headers=HEADERS, timeout=5)
-        if r.status_code == 200:
-            return r.json()
-    except Exception:
-        pass
     return list(IN_MEMORY_SESSIONS.values())
 
