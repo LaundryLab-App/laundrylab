@@ -35,9 +35,11 @@ export const AdminPortal: React.FC = () => {
   const [isRolloverModalOpen, setIsRolloverModalOpen] = useState(false);
   const [expandedDay, setExpandedDay] = useState<number | null>(null);
 
-  // Daily drawer sub-filters (designed for high-volume 25+ orders/day)
+  // Daily drawer sub-filters & pagination (5 items at a time for high-volume 25+ orders/day)
   const [dailyDrawerBranchFilter, setDailyDrawerBranchFilter] = useState<string>('All');
   const [dailyDrawerSearch, setDailyDrawerSearch] = useState<string>('');
+  const [dailyDrawerPage, setDailyDrawerPage] = useState<number>(1);
+  const DAILY_PAGE_SIZE = 5;
 
   // Filters
   const [selectedBranchFilter, setSelectedBranchFilter] = useState<string>('All');
@@ -572,6 +574,7 @@ export const AdminPortal: React.FC = () => {
                             setExpandedDay(day.dayNumber);
                             setDailyDrawerBranchFilter('All');
                             setDailyDrawerSearch('');
+                            setDailyDrawerPage(1);
                           }
                         }}
                       >
@@ -617,7 +620,7 @@ export const AdminPortal: React.FC = () => {
                         </td>
                       </tr>
 
-                      {/* Expandable Day Details Drawer (High-Volume Compact Data Ledger) */}
+                      {/* Expandable Day Details Drawer (High-Volume Compact Data Ledger with 5 items/page Pagination) */}
                       {isExpanded && (() => {
                         const displayedDayOrders = dayOrders.filter(o => {
                           const matchesBranch = dailyDrawerBranchFilter === 'All' || o.branch === dailyDrawerBranchFilter;
@@ -628,6 +631,11 @@ export const AdminPortal: React.FC = () => {
                             (o.customerPhone && o.customerPhone.includes(dailyDrawerSearch));
                           return matchesBranch && matchesSearch;
                         });
+
+                        const totalPages = Math.ceil(displayedDayOrders.length / DAILY_PAGE_SIZE) || 1;
+                        const currentPage = Math.min(dailyDrawerPage, totalPages);
+                        const startIndex = (currentPage - 1) * DAILY_PAGE_SIZE;
+                        const paginatedOrders = displayedDayOrders.slice(startIndex, startIndex + DAILY_PAGE_SIZE);
 
                         return (
                           <tr style={{ background: '#f8fafc' }}>
@@ -641,7 +649,7 @@ export const AdminPortal: React.FC = () => {
                                       {day.dayLabel} Orders Ledger ({dayOrders.length} total)
                                     </strong>
                                     <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-                                      High-volume order breakdown with instant branch filtering
+                                      Showing 5 orders at a time with instant branch filtering
                                     </span>
                                   </div>
 
@@ -661,7 +669,10 @@ export const AdminPortal: React.FC = () => {
                                         type="text"
                                         placeholder="Search order #, customer..."
                                         value={dailyDrawerSearch}
-                                        onChange={(e) => setDailyDrawerSearch(e.target.value)}
+                                        onChange={(e) => {
+                                          setDailyDrawerSearch(e.target.value);
+                                          setDailyDrawerPage(1);
+                                        }}
                                         onClick={(e) => e.stopPropagation()}
                                         style={{ fontSize: '12px', padding: '5px 10px 5px 30px', borderRadius: '6px', border: '1px solid #cbd5e1', width: '190px' }}
                                       />
@@ -674,7 +685,11 @@ export const AdminPortal: React.FC = () => {
                                   <span style={{ fontSize: '11.5px', fontWeight: 700, color: 'var(--text-secondary)', marginRight: '4px' }}>Filter Branch:</span>
                                   <button
                                     type="button"
-                                    onClick={(e) => { e.stopPropagation(); setDailyDrawerBranchFilter('All'); }}
+                                    onClick={(e) => { 
+                                      e.stopPropagation(); 
+                                      setDailyDrawerBranchFilter('All'); 
+                                      setDailyDrawerPage(1);
+                                    }}
                                     style={{
                                       fontSize: '11px',
                                       padding: '3px 9px',
@@ -698,7 +713,11 @@ export const AdminPortal: React.FC = () => {
                                       <button
                                         key={bName}
                                         type="button"
-                                        onClick={(e) => { e.stopPropagation(); setDailyDrawerBranchFilter(bName); }}
+                                        onClick={(e) => { 
+                                          e.stopPropagation(); 
+                                          setDailyDrawerBranchFilter(bName); 
+                                          setDailyDrawerPage(1);
+                                        }}
                                         style={{
                                           fontSize: '11px',
                                           padding: '3px 9px',
@@ -717,28 +736,28 @@ export const AdminPortal: React.FC = () => {
                                   })}
                                 </div>
 
-                                {/* High-Density Scrollable Table (Comfortably holds 25+ orders without page stretch) */}
-                                <div style={{ maxHeight: '280px', overflowY: 'auto' }}>
+                                {/* Compact Table */}
+                                <div>
                                   {displayedDayOrders.length === 0 ? (
                                     <div style={{ padding: '24px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '12.5px' }}>
                                       {dayOrders.length === 0 ? 'No orders recorded on this day.' : 'No orders match this filter / search.'}
                                     </div>
                                   ) : (
                                     <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
-                                      <thead style={{ position: 'sticky', top: 0, background: '#f8fafc', zIndex: 1, borderBottom: '1px solid #e2e8f0' }}>
+                                      <thead style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
                                         <tr>
-                                          <th style={{ padding: '8px 12px', textAlign: 'left', fontWeight: 600, color: 'var(--text-secondary)' }}>Order #</th>
-                                          <th style={{ padding: '8px 10px', textAlign: 'left', fontWeight: 600, color: 'var(--text-secondary)' }}>Branch</th>
-                                          <th style={{ padding: '8px 12px', textAlign: 'left', fontWeight: 600, color: 'var(--text-secondary)' }}>Customer</th>
-                                          <th style={{ padding: '8px 12px', textAlign: 'left', fontWeight: 600, color: 'var(--text-secondary)' }}>Service & Load</th>
-                                          <th style={{ padding: '8px 12px', textAlign: 'left', fontWeight: 600, color: 'var(--text-secondary)' }}>Payment Channel</th>
-                                          <th style={{ padding: '8px 10px', textAlign: 'center', fontWeight: 600, color: 'var(--text-secondary)' }}>Status</th>
-                                          <th style={{ padding: '8px 14px', textAlign: 'right', fontWeight: 600, color: 'var(--text-secondary)' }}>Amount</th>
-                                          <th style={{ padding: '8px 12px', textAlign: 'center', fontWeight: 600, color: 'var(--text-secondary)' }}>Action</th>
+                                          <th style={{ padding: '9px 12px', textAlign: 'left', fontWeight: 600, color: 'var(--text-secondary)' }}>Order #</th>
+                                          <th style={{ padding: '9px 10px', textAlign: 'left', fontWeight: 600, color: 'var(--text-secondary)' }}>Branch</th>
+                                          <th style={{ padding: '9px 12px', textAlign: 'left', fontWeight: 600, color: 'var(--text-secondary)' }}>Customer</th>
+                                          <th style={{ padding: '9px 12px', textAlign: 'left', fontWeight: 600, color: 'var(--text-secondary)' }}>Service & Load</th>
+                                          <th style={{ padding: '9px 12px', textAlign: 'left', fontWeight: 600, color: 'var(--text-secondary)' }}>Payment Channel</th>
+                                          <th style={{ padding: '9px 10px', textAlign: 'center', fontWeight: 600, color: 'var(--text-secondary)' }}>Status</th>
+                                          <th style={{ padding: '9px 14px', textAlign: 'right', fontWeight: 600, color: 'var(--text-secondary)' }}>Amount</th>
+                                          <th style={{ padding: '9px 12px', textAlign: 'center', fontWeight: 600, color: 'var(--text-secondary)' }}>Action</th>
                                         </tr>
                                       </thead>
                                       <tbody>
-                                        {displayedDayOrders.map((o, idx) => {
+                                        {paginatedOrders.map((o, idx) => {
                                           const isPaidCounter = o.paymentMethod === 'Speed Point/Cash(Paid at Counter)' || o.paymentStatus === 'Paid (Counter)';
                                           const isVerifiedEft = o.paymentStatus === 'Paid (EFT/PayShap Verified)';
                                           const isPendingPop = o.paymentStatus === 'POP Uploaded (Pending Verification)';
@@ -746,24 +765,24 @@ export const AdminPortal: React.FC = () => {
 
                                           return (
                                             <tr key={o.id} style={{ borderBottom: '1px solid #f1f5f9', background: idx % 2 === 0 ? '#ffffff' : '#fcfcfd' }}>
-                                              <td style={{ padding: '8px 12px', fontWeight: 700, color: 'var(--brand-primary)' }}>
+                                              <td style={{ padding: '9px 12px', fontWeight: 700, color: 'var(--brand-primary)' }}>
                                                 #{o.id}
                                               </td>
-                                              <td style={{ padding: '8px 10px' }}>
+                                              <td style={{ padding: '9px 10px' }}>
                                                 <span className="badge badge-in-use" style={{ fontSize: '10px', padding: '2px 6px' }}>{o.branch}</span>
                                               </td>
-                                              <td style={{ padding: '8px 12px', fontWeight: 600, color: 'var(--text-main)' }}>
+                                              <td style={{ padding: '9px 12px', fontWeight: 600, color: 'var(--text-main)' }}>
                                                 {o.customerName} <span style={{ color: 'var(--text-muted)', fontSize: '10.5px', fontWeight: 400 }}>({o.customerPhone})</span>
                                               </td>
-                                              <td style={{ padding: '8px 12px', color: 'var(--text-secondary)' }}>
+                                              <td style={{ padding: '9px 12px', color: 'var(--text-secondary)' }}>
                                                 {o.serviceName} • {o.weightOrQty} {o.unit}
                                               </td>
-                                              <td style={{ padding: '8px 12px' }}>
+                                              <td style={{ padding: '9px 12px' }}>
                                                 <span style={{ fontSize: '11px', color: isPaidCounter ? '#047857' : '#1d4ed8', fontWeight: 600 }}>
                                                   {isPaidCounter ? '💳 Speed Point / POS' : '📱 EFT / PayShap'}
                                                 </span>
                                               </td>
-                                              <td style={{ padding: '8px 10px', textAlign: 'center' }}>
+                                              <td style={{ padding: '9px 10px', textAlign: 'center' }}>
                                                 <span style={{
                                                   fontSize: '10.5px',
                                                   padding: '2px 7px',
@@ -775,10 +794,10 @@ export const AdminPortal: React.FC = () => {
                                                   {isPaidCounter ? '✓ Paid (Till)' : isVerifiedEft ? '✓ Verified EFT' : isPendingPop ? 'Pending POP' : isRejected ? 'Rejected' : 'Awaiting'}
                                                 </span>
                                               </td>
-                                              <td style={{ padding: '8px 14px', textAlign: 'right', fontWeight: 700, color: 'var(--success)', fontSize: '12.5px' }}>
+                                              <td style={{ padding: '9px 14px', textAlign: 'right', fontWeight: 700, color: 'var(--success)', fontSize: '12.5px' }}>
                                                 R{o.amount.toFixed(2)}
                                               </td>
-                                              <td style={{ padding: '8px 12px', textAlign: 'center' }}>
+                                              <td style={{ padding: '9px 12px', textAlign: 'center' }}>
                                                 {o.proofOfPayment?.fileData ? (
                                                   <button
                                                     type="button"
@@ -799,6 +818,59 @@ export const AdminPortal: React.FC = () => {
                                     </table>
                                   )}
                                 </div>
+
+                                {/* Pagination Controls (Showing 5 items at a time) */}
+                                {displayedDayOrders.length > 0 && (
+                                  <div style={{ padding: '10px 16px', background: '#f8fafc', borderTop: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+                                    <div style={{ fontSize: '11.5px', color: 'var(--text-secondary)' }}>
+                                      Showing <strong>{startIndex + 1}–{Math.min(startIndex + DAILY_PAGE_SIZE, displayedDayOrders.length)}</strong> of <strong>{displayedDayOrders.length}</strong> orders (5 items per page)
+                                    </div>
+
+                                    {totalPages > 1 && (
+                                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                        <button
+                                          type="button"
+                                          disabled={currentPage <= 1}
+                                          onClick={(e) => { e.stopPropagation(); setDailyDrawerPage(prev => Math.max(1, prev - 1)); }}
+                                          style={{
+                                            padding: '4px 10px',
+                                            fontSize: '11.5px',
+                                            fontWeight: 600,
+                                            borderRadius: '6px',
+                                            border: '1px solid #cbd5e1',
+                                            background: currentPage <= 1 ? '#f1f5f9' : '#ffffff',
+                                            color: currentPage <= 1 ? '#94a3b8' : 'var(--text-main)',
+                                            cursor: currentPage <= 1 ? 'not-allowed' : 'pointer'
+                                          }}
+                                        >
+                                          Previous
+                                        </button>
+
+                                        <span style={{ fontSize: '11.5px', fontWeight: 600, color: 'var(--text-secondary)', padding: '0 6px' }}>
+                                          Page {currentPage} of {totalPages}
+                                        </span>
+
+                                        <button
+                                          type="button"
+                                          disabled={currentPage >= totalPages}
+                                          onClick={(e) => { e.stopPropagation(); setDailyDrawerPage(prev => Math.min(totalPages, prev + 1)); }}
+                                          style={{
+                                            padding: '4px 10px',
+                                            fontSize: '11.5px',
+                                            fontWeight: 600,
+                                            borderRadius: '6px',
+                                            border: '1px solid #cbd5e1',
+                                            background: currentPage >= totalPages ? '#f1f5f9' : '#ffffff',
+                                            color: currentPage >= totalPages ? '#94a3b8' : 'var(--text-main)',
+                                            cursor: currentPage >= totalPages ? 'not-allowed' : 'pointer'
+                                          }}
+                                        >
+                                          Next
+                                        </button>
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
                               </div>
                             </td>
                           </tr>
