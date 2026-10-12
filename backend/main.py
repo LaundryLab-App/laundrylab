@@ -453,3 +453,15 @@ def save_shift_reconciliation(payload: Dict[str, Any] = Body(...)):
     if not ok:
         raise HTTPException(status_code=500, detail="Failed to save shift reconciliation to database")
     return {"success": True}
+
+@app.get("/api/rollovers")
+def get_monthly_rollovers():
+    return {"rollovers": db.fetch_rollovers()}
+
+@app.post("/api/rollovers")
+def save_monthly_rollover(payload: Dict[str, Any] = Body(...)):
+    ok = db.create_rollover(payload)
+    if not ok:
+        raise HTTPException(status_code=500, detail="Failed to save monthly rollover")
+    return {"success": True, "rollover": payload}
+

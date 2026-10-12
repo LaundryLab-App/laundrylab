@@ -90,6 +90,7 @@ export interface Order {
   startedAt?: string;
   durationMinutes?: number;
   proofOfPayment?: ProofOfPayment;
+  createdAt?: string;
 }
 
 export interface BranchInfo {
@@ -104,4 +105,36 @@ export interface ServiceRate {
   rate: number;
   unit: 'kg' | 'pair';
 }
+
+export interface DailyBranchRevenue {
+  dayNumber: number;
+  dateStr: string;
+  dayLabel: string;
+  branchRevenues: Record<BranchName, number>;
+  totalDayRevenue: number;
+  ordersCount: number;
+  counterTotal: number;
+  eftTotal: number;
+}
+
+export interface MonthlyRollover {
+  id: string;
+  monthKey: string;
+  monthName: string;
+  closedAt: string;
+  closedBy: string;
+  totalIntake: number;
+  counterTotal: number;
+  eftTotal: number;
+  ordersCount: number;
+  branchBreakdown: Record<BranchName, {
+    totalRevenue: number;
+    counterRevenue: number;
+    eftRevenue: number;
+    ordersCount: number;
+  }>;
+  dailyTotals?: Record<number, Record<BranchName, number>>;
+  notes?: string;
+}
+
 

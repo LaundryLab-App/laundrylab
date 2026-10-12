@@ -8,7 +8,8 @@ import {
   PaymentMethod,
   PaymentStatus,
   OrderStatus,
-  ProofOfPayment
+  ProofOfPayment,
+  MonthlyRollover
 } from '../types/laundry';
 
 export const BRANCHES: BranchInfo[] = [
@@ -106,6 +107,8 @@ interface LaundryContextType {
   getBranchMachines: (branchName?: BranchName) => Machine[];
   toastMessage: { text: string; type: 'success' | 'error' } | null;
   showToast: (text: string, type?: 'success' | 'error') => void;
+  rollovers: MonthlyRollover[];
+  createMonthlyRollover: (rollover: Omit<MonthlyRollover, 'id' | 'closedAt'>) => Promise<boolean>;
 }
 
 const LaundryContext = createContext<LaundryContextType | undefined>(undefined);
@@ -122,6 +125,7 @@ export const LaundryProvider: React.FC<{ children: React.ReactNode }> = ({ child
   // Database is the single source of truth - no longer persisted in browser localStorage
   const [orders, setOrders] = useState<Order[]>([]);
   const [machines, setMachines] = useState<Record<BranchName, Machine[]>>(INITIAL_MACHINES);
+  const [rollovers, setRollovers] = useState<MonthlyRollover[]>([]);
 
   const [toastMessage, setToastMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
 
@@ -167,6 +171,15 @@ export const LaundryProvider: React.FC<{ children: React.ReactNode }> = ({ child
                 return bJson !== pJson ? data.machines : prev;
               });
             }
+          }
+        }
+
+        // Fetch monthly rollovers archive
+        const rRes = await fetch('/api/rollovers');
+        if (rRes.ok) {
+          const rData = await rRes.json();
+          if (isMounted && rData && Array.isArray(rData.rollovers)) {
+            setRollovers(rData.rollovers);
           }
         }
       } catch (err) {
@@ -609,6 +622,30 @@ export const LaundryProvider: React.FC<{ children: React.ReactNode }> = ({ child
     });
   };
 
+  const createMonthlyRollover = async (data: Omit<MonthlyRollover, 'id' | 'closedAt'>): Promise<boolean> => {
+    const newRollover: MonthlyRollover = {
+      ...data,
+      id: `rollover-${data.monthKey}-${Date.now()}`,
+      closedAt: new Date().toISOString()
+    };
+    try {
+      const res = await fetch('/api/rollovers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newRollover)
+      });
+      if (res.ok) {
+        setRollovers(prev => [newRollover, ...prev.filter(r => r.monthKey !== newRollover.monthKey)]);
+        showToast(`Month ${data.monthName} successfully closed and archived!`);
+        return true;
+      }
+    } catch (e) {
+      console.error('Failed to save rollover', e);
+    }
+    showToast('Failed to save monthly rollover', 'error');
+    return false;
+  };
+
   return (
     <LaundryContext.Provider
       value={{
@@ -631,7 +668,9 @@ export const LaundryProvider: React.FC<{ children: React.ReactNode }> = ({ child
         getBranchOrders,
         getBranchMachines,
         toastMessage,
-        showToast
+        showToast,
+        rollovers,
+        createMonthlyRollover
       }}
     >
       {children}

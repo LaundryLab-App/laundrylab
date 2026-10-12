@@ -98,7 +98,8 @@ def fetch_orders(branch: Optional[str] = None) -> List[Dict[str, Any]]:
                     "smsSent": bool(row.get("sms_sent")),
                     "startedAt": row.get("started_at"),
                     "durationMinutes": row.get("duration_minutes"),
-                    "proofOfPayment": row.get("proof_of_payment")
+                    "proofOfPayment": row.get("proof_of_payment"),
+                    "createdAt": row.get("created_at") or ""
                 }
                 for row in rows
             ]
@@ -188,6 +189,75 @@ def create_reconciliation(rec: Dict[str, Any]) -> bool:
         return r.status_code in (200, 201)
     except Exception as e:
         print(f"Error creating reconciliation in Supabase: {e}")
+        return False
+
+ROLLOVERS_FILE = os.path.join(os.path.dirname(__file__), "monthly_rollovers.json")
+
+def fetch_rollovers() -> List[Dict[str, Any]]:
+    results = []
+    if os.path.exists(ROLLOVERS_FILE):
+        try:
+            with open(ROLLOVERS_FILE, "r", encoding="utf-8") as f:
+                results = json.load(f)
+        except Exception as e:
+            print(f"Error reading rollovers file: {e}")
+
+    # If local file is empty, check Supabase backup in shift_reconciliations
+    if not results:
+        try:
+            url = f"{SUPABASE_URL}/rest/v1/shift_reconciliations?notes=like.MONTHLY_ROLLOVER*&order=created_at.desc"
+            r = requests.get(url, headers=HEADERS, timeout=8)
+            if r.status_code == 200:
+                rows = r.json()
+                for row in rows:
+                    notes_str = row.get("notes") or ""
+                    if notes_str.startswith("MONTHLY_ROLLOVER:"):
+                        parts = notes_str.split(":", 2)
+                        if len(parts) >= 3:
+                            try:
+                                parsed = json.loads(parts[2])
+                                results.append(parsed)
+                            except Exception:
+                                pass
+                if results:
+                    try:
+                        with open(ROLLOVERS_FILE, "w", encoding="utf-8") as f:
+                            json.dump(results, f, indent=2)
+                    except Exception:
+                        pass
+        except Exception as e:
+            print(f"Error fetching rollovers backup from Supabase: {e}")
+
+    return results
+
+def create_rollover(rec: Dict[str, Any]) -> bool:
+    try:
+        current = fetch_rollovers()
+        rec_id = str(rec.get("id") or rec.get("monthKey"))
+        rec["id"] = rec_id
+        # Remove any previous version of this month and insert latest
+        current = [r for r in current if str(r.get("id")) != rec_id and str(r.get("monthKey")) != str(rec.get("monthKey"))]
+        current.insert(0, rec)
+
+        try:
+            with open(ROLLOVERS_FILE, "w", encoding="utf-8") as f:
+                json.dump(current, f, indent=2)
+        except Exception:
+            pass
+
+        # Also backup to Supabase shift_reconciliations table
+        create_reconciliation({
+            "branch": "All Branches",
+            "operatorName": rec.get("closedBy", "Mpho (Owner)"),
+            "speedpointCashTotal": float(rec.get("counterTotal") or 0),
+            "eftPayshapTotal": float(rec.get("eftTotal") or 0),
+            "pendingTotal": 0,
+            "ordersCount": int(rec.get("ordersCount") or 0),
+            "notes": f"MONTHLY_ROLLOVER:{rec.get('monthKey')}:{json.dumps(rec)}"
+        })
+        return True
+    except Exception as e:
+        print(f"Error creating monthly rollover: {e}")
         return False
 
 # In-memory high-speed session registry
