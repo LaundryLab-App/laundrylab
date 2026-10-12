@@ -745,72 +745,105 @@ export const AdminPortal: React.FC = () => {
                                       {dayOrders.length === 0 ? 'No orders recorded on this day.' : 'No orders match this filter / search.'}
                                     </div>
                                   ) : (
-                                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
-                                      <thead style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
-                                        <tr>
-                                          <th style={{ padding: '9px 12px', textAlign: 'left', fontWeight: 600, color: 'var(--text-secondary)' }}>Order #</th>
-                                          <th style={{ padding: '9px 10px', textAlign: 'left', fontWeight: 600, color: 'var(--text-secondary)' }}>Branch</th>
-                                          <th style={{ padding: '9px 12px', textAlign: 'left', fontWeight: 600, color: 'var(--text-secondary)' }}>Customer</th>
-                                          <th style={{ padding: '9px 12px', textAlign: 'left', fontWeight: 600, color: 'var(--text-secondary)' }}>Service & Load</th>
-                                          <th style={{ padding: '9px 12px', textAlign: 'left', fontWeight: 600, color: 'var(--text-secondary)' }}>Payment Channel</th>
-                                          <th style={{ padding: '9px 10px', textAlign: 'center', fontWeight: 600, color: 'var(--text-secondary)' }}>Status</th>
-                                          <th style={{ padding: '9px 14px', textAlign: 'right', fontWeight: 600, color: 'var(--text-secondary)' }}>Amount</th>
-                                          <th style={{ padding: '9px 12px', textAlign: 'center', fontWeight: 600, color: 'var(--text-secondary)' }}>Action</th>
+                                    <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '12.5px' }}>
+                                      <thead>
+                                        <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0', color: 'var(--text-muted)' }}>
+                                          <th style={{ padding: '10px 12px' }}>Order ID</th>
+                                          <th style={{ padding: '10px 12px' }}>Time</th>
+                                          <th style={{ padding: '10px 12px' }}>Branch</th>
+                                          <th style={{ padding: '10px 12px' }}>Customer / Ref</th>
+                                          <th style={{ padding: '10px 12px' }}>Service & Load</th>
+                                          <th style={{ padding: '10px 12px' }}>Payment Channel</th>
+                                          <th style={{ padding: '10px 12px' }}>Payment Status</th>
+                                          <th style={{ padding: '10px 12px' }}>Amount (ZAR)</th>
+                                          <th style={{ padding: '10px 12px' }}>Action</th>
                                         </tr>
                                       </thead>
                                       <tbody>
-                                        {paginatedOrders.map((o, idx) => {
-                                          const isPaidCounter = o.paymentMethod === 'Speed Point/Cash(Paid at Counter)' || o.paymentStatus === 'Paid (Counter)';
-                                          const isVerifiedEft = o.paymentStatus === 'Paid (EFT/PayShap Verified)';
-                                          const isPendingPop = o.paymentStatus === 'POP Uploaded (Pending Verification)';
-                                          const isRejected = o.paymentStatus.includes('Rejected');
+                                        {paginatedOrders.map((o) => {
+                                          const isPaid = o.paymentStatus.startsWith('Paid');
+                                          const isPaidCounter = o.paymentStatus === 'Paid (Counter)' || o.paymentMethod === 'Speed Point/Cash(Paid at Counter)';
+                                          const isPopPending = o.paymentStatus === 'POP Uploaded (Pending Verification)';
+                                          const isPopRejected = o.paymentStatus === 'POP Rejected (Re-upload Required)' || !!o.proofOfPayment?.rejected;
 
                                           return (
-                                            <tr key={o.id} style={{ borderBottom: '1px solid #f1f5f9', background: idx % 2 === 0 ? '#ffffff' : '#fcfcfd' }}>
-                                              <td style={{ padding: '9px 12px', fontWeight: 700, color: 'var(--brand-primary)' }}>
+                                            <tr key={o.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                                              <td style={{ padding: '10px 12px', fontWeight: 700, color: 'var(--brand-accent)' }}>
                                                 #{o.id}
                                               </td>
-                                              <td style={{ padding: '9px 10px' }}>
-                                                <span className="badge badge-in-use" style={{ fontSize: '10px', padding: '2px 6px' }}>{o.branch}</span>
+                                              <td style={{ padding: '10px 12px', color: 'var(--text-muted)', fontSize: '11.5px', fontWeight: 600 }}>
+                                                {o.timestamp}
                                               </td>
-                                              <td style={{ padding: '9px 12px', fontWeight: 600, color: 'var(--text-main)' }}>
-                                                {o.customerName} <span style={{ color: 'var(--text-muted)', fontSize: '10.5px', fontWeight: 400 }}>({o.customerPhone})</span>
+                                              <td style={{ padding: '10px 12px' }}>
+                                                <span className="badge badge-in-use" style={{ fontSize: '10.5px', padding: '2px 7px' }}>{o.branch}</span>
                                               </td>
-                                              <td style={{ padding: '9px 12px', color: 'var(--text-secondary)' }}>
+                                              <td style={{ padding: '10px 12px' }}>
+                                                <strong style={{ color: 'var(--text-main)', display: 'block' }}>{o.customerName}</strong>
+                                                {o.unitNumber && <span style={{ color: 'var(--brand-accent)', fontSize: '11px', display: 'block' }}>🏢 {o.unitNumber}</span>}
+                                                <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{o.customerPhone}</span>
+                                              </td>
+                                              <td style={{ padding: '10px 12px', color: 'var(--text-secondary)' }}>
                                                 {o.serviceName} • {o.weightOrQty} {o.unit}
                                               </td>
-                                              <td style={{ padding: '9px 12px' }}>
-                                                <span style={{ fontSize: '11px', color: isPaidCounter ? '#047857' : '#1d4ed8', fontWeight: 600 }}>
+                                              <td style={{ padding: '10px 12px' }}>
+                                                <span style={{ fontSize: '11.5px', color: isPaidCounter ? '#047857' : '#1d4ed8', fontWeight: 600 }}>
                                                   {isPaidCounter ? '💳 Speed Point / POS' : '📱 EFT / PayShap'}
                                                 </span>
                                               </td>
-                                              <td style={{ padding: '9px 10px', textAlign: 'center' }}>
-                                                <span style={{
-                                                  fontSize: '10.5px',
-                                                  padding: '2px 7px',
-                                                  borderRadius: '10px',
-                                                  fontWeight: 600,
-                                                  background: isPaidCounter ? '#ecfdf5' : isVerifiedEft ? '#eff6ff' : isPendingPop ? '#fef3c7' : isRejected ? '#fee2e2' : '#f3f4f6',
-                                                  color: isPaidCounter ? '#047857' : isVerifiedEft ? '#1d4ed8' : isPendingPop ? '#b45309' : isRejected ? '#dc2626' : '#6b7280'
-                                                }}>
-                                                  {isPaidCounter ? '✓ Paid (Till)' : isVerifiedEft ? '✓ Verified EFT' : isPendingPop ? 'Pending POP' : isRejected ? 'Rejected' : 'Awaiting'}
-                                                </span>
+                                              <td style={{ padding: '10px 12px' }}>
+                                                {isPopRejected ? (
+                                                  <span className="badge" style={{ background: '#fee2e2', color: '#b91c1c', border: '1px solid #fca5a5', fontSize: '10.5px' }}>
+                                                    POP Rejected
+                                                  </span>
+                                                ) : (
+                                                  <span className={`badge ${isPaid ? 'badge-available' : isPopPending ? 'badge-in-use' : 'badge-completed'}`} style={{ fontSize: '10.5px' }}>
+                                                    {o.paymentStatus}
+                                                  </span>
+                                                )}
                                               </td>
-                                              <td style={{ padding: '9px 14px', textAlign: 'right', fontWeight: 700, color: 'var(--success)', fontSize: '12.5px' }}>
+                                              <td style={{ padding: '10px 12px', fontWeight: 700, color: 'var(--success)', fontSize: '13px' }}>
                                                 R{o.amount.toFixed(2)}
                                               </td>
-                                              <td style={{ padding: '9px 12px', textAlign: 'center' }}>
-                                                {o.proofOfPayment?.fileData ? (
+                                              <td style={{ padding: '10px 12px' }}>
+                                                {isPopPending ? (
+                                                  <button
+                                                    type="button"
+                                                    className="btn btn-primary"
+                                                    style={{ minHeight: '32px', padding: '4px 10px', fontSize: '11.5px', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '5px', borderRadius: '7px', whiteSpace: 'nowrap' }}
+                                                    onClick={(e) => { e.stopPropagation(); setSelectedPopOrder(o); }}
+                                                  >
+                                                    <ShieldCheck size={13} /> Review POP
+                                                  </button>
+                                                ) : isPopRejected ? (
                                                   <button
                                                     type="button"
                                                     className="btn btn-outline"
-                                                    style={{ minHeight: '26px', padding: '2px 8px', fontSize: '10.5px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                                                    style={{ minHeight: '32px', padding: '4px 10px', fontSize: '11.5px', fontWeight: 600, color: '#dc2626', borderColor: '#fca5a5', display: 'inline-flex', alignItems: 'center', gap: '5px', borderRadius: '7px', whiteSpace: 'nowrap' }}
                                                     onClick={(e) => { e.stopPropagation(); setSelectedPopOrder(o); }}
                                                   >
-                                                    <Eye size={11} /> POP Slip
+                                                    <RotateCcw size={12} /> View Rejected POP
                                                   </button>
+                                                ) : isPaidCounter ? (
+                                                  <span style={{ color: '#047857', fontSize: '11.5px', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                                                    <CheckCircle2 size={13} /> Settled at Till
+                                                  </span>
+                                                ) : o.paymentStatus === 'Paid (EFT/PayShap Verified)' && o.proofOfPayment?.fileData ? (
+                                                  <button
+                                                    type="button"
+                                                    className="btn btn-outline"
+                                                    style={{ minHeight: '32px', padding: '4px 10px', fontSize: '11.5px', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '5px', borderRadius: '7px', whiteSpace: 'nowrap' }}
+                                                    onClick={(e) => { e.stopPropagation(); setSelectedPopOrder(o); }}
+                                                  >
+                                                    <Eye size={12} /> View POP Slip
+                                                  </button>
+                                                ) : o.paymentStatus === 'Paid (EFT/PayShap Verified)' ? (
+                                                  <span style={{ color: '#047857', fontSize: '11.5px', fontWeight: 600 }}>
+                                                    ✓ Verified EFT
+                                                  </span>
                                                 ) : (
-                                                  <span style={{ color: 'var(--text-muted)', fontSize: '10px' }}>—</span>
+                                                  <span style={{ color: 'var(--warning)', fontSize: '11.5px', fontWeight: 600 }}>
+                                                    Awaiting Customer POP
+                                                  </span>
                                                 )}
                                               </td>
                                             </tr>
