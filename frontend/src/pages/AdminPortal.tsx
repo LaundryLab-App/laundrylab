@@ -24,7 +24,7 @@ import {
 } from 'lucide-react';
 import { ProofOfPaymentModal } from '../components/modals/ProofOfPaymentModal';
 import { MonthRolloverModal } from '../components/modals/MonthRolloverModal';
-import { Order, BranchName, DailyBranchRevenue } from '../types/laundry';
+import { Order, BranchName, DailyBranchRevenue, MonthlyRollover } from '../types/laundry';
 
 export const AdminPortal: React.FC = () => {
   const { orders, machines, verifyProofOfPayment, rollovers, createMonthlyRollover } = useLaundry();
@@ -35,25 +35,51 @@ export const AdminPortal: React.FC = () => {
   const [isRolloverModalOpen, setIsRolloverModalOpen] = useState(false);
   const [expandedDay, setExpandedDay] = useState<number | null>(null);
 
+  // Daily drawer sub-filters (designed for high-volume 25+ orders/day)
+  const [dailyDrawerBranchFilter, setDailyDrawerBranchFilter] = useState<string>('All');
+  const [dailyDrawerSearch, setDailyDrawerSearch] = useState<string>('');
+
   // Filters
   const [selectedBranchFilter, setSelectedBranchFilter] = useState<string>('All');
   const [ledgerSearch, setLedgerSearch] = useState('');
   const [selectedPopOrder, setSelectedPopOrder] = useState<Order | null>(null);
 
-  // Available months list extracted from orders and archived rollovers
+  // Helper to compute next month key YYYY-MM
+  const getNextMonthKey = (key: string): string => {
+    try {
+      const [y, m] = key.split('-').map(Number);
+      const nextDate = new Date(y, m, 1);
+      return `${nextDate.getFullYear()}-${(nextDate.getMonth() + 1).toString().padStart(2, '0')}`;
+    } catch {
+      return key;
+    }
+  };
+
+  // Available months list extracted from orders, archived rollovers, and calendar
   const availableMonths = useMemo(() => {
     const keys = new Set<string>();
+    
+    // Always include current active calendar month
     keys.add(currentMonthKey);
+
+    // Include next month so Mpho can see the upcoming period ready to rollover into
+    keys.add(getNextMonthKey(currentMonthKey));
+
+    // Include all months where orders exist
     orders.forEach(o => {
       if (o.createdAt) {
         keys.add(o.createdAt.slice(0, 7));
       }
     });
+
+    // Include all archived rollover months and their subsequent active months
     rollovers.forEach(r => {
       if (r.monthKey) {
         keys.add(r.monthKey);
+        keys.add(getNextMonthKey(r.monthKey));
       }
     });
+
     return Array.from(keys).sort().reverse();
   }, [orders, rollovers, currentMonthKey]);
 
@@ -259,6 +285,17 @@ export const AdminPortal: React.FC = () => {
     verifyProofOfPayment(orderId, 'Mpho (Owner)');
   };
 
+  const handleConfirmRollover = async (data: Omit<MonthlyRollover, 'id' | 'closedAt'>): Promise<boolean> => {
+    const success = await createMonthlyRollover(data);
+    if (success) {
+      setIsRolloverModalOpen(false);
+      // Automatically advance to the next month to begin fresh Day 1 stats
+      const nextMonth = getNextMonthKey(data.monthKey);
+      setSelectedMonthKey(nextMonth);
+    }
+    return success;
+  };
+
   return (
     <div className="app-container">
       {/* Top Header */}
@@ -313,9 +350,14 @@ export const AdminPortal: React.FC = () => {
                 const label = formatMonthLabel(key);
                 const isCur = key === currentMonthKey;
                 const isArchived = rollovers.some(r => r.monthKey === key);
+                const isUpcoming = key > currentMonthKey;
+                let badge = '';
+                if (isCur) badge = '(Current Active)';
+                else if (isArchived) badge = '(Archived)';
+                else if (isUpcoming) badge = '(Next / Upcoming)';
                 return (
                   <option key={key} value={key}>
-                    {label} {isCur ? '(Current Active)' : isArchived ? '(Archived)' : ''}
+                    {label} {badge}
                   </option>
                 );
               })}
@@ -523,7 +565,15 @@ export const AdminPortal: React.FC = () => {
                           cursor: 'pointer',
                           transition: 'background 0.15s ease'
                         }}
-                        onClick={() => setExpandedDay(isExpanded ? null : day.dayNumber)}
+                        onClick={() => {
+                          if (isExpanded) {
+                            setExpandedDay(null);
+                          } else {
+                            setExpandedDay(day.dayNumber);
+                            setDailyDrawerBranchFilter('All');
+                            setDailyDrawerSearch('');
+                          }
+                        }}
                       >
                         <td style={{ padding: '12px 14px', fontWeight: 600, color: 'var(--text-main)' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -567,52 +617,193 @@ export const AdminPortal: React.FC = () => {
                         </td>
                       </tr>
 
-                      {/* Expandable Day Details Drawer */}
-                      {isExpanded && (
-                        <tr style={{ background: 'var(--bg-input)' }}>
-                          <td colSpan={9} style={{ padding: '14px 20px', borderBottom: '1.5px solid var(--border-color)' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', flexWrap: 'wrap', gap: '10px' }}>
-                              <strong style={{ fontSize: '13.5px', color: 'var(--brand-primary)' }}>
-                                Orders Breakdown for {day.dayLabel} ({dayOrders.length} intakes):
-                              </strong>
-                              <div style={{ display: 'flex', gap: '14px', fontSize: '12.5px' }}>
-                                <span style={{ color: '#047857', fontWeight: 600 }}>
-                                  Counter POS / Cash: <strong>R{day.counterTotal.toFixed(2)}</strong>
-                                </span>
-                                <span style={{ color: '#1d4ed8', fontWeight: 600 }}>
-                                  EFT & PayShap: <strong>R{day.eftTotal.toFixed(2)}</strong>
-                                </span>
-                              </div>
-                            </div>
+                      {/* Expandable Day Details Drawer (High-Volume Compact Data Ledger) */}
+                      {isExpanded && (() => {
+                        const displayedDayOrders = dayOrders.filter(o => {
+                          const matchesBranch = dailyDrawerBranchFilter === 'All' || o.branch === dailyDrawerBranchFilter;
+                          const matchesSearch = !dailyDrawerSearch || 
+                            o.id.includes(dailyDrawerSearch) || 
+                            o.customerName.toLowerCase().includes(dailyDrawerSearch.toLowerCase()) || 
+                            o.serviceName.toLowerCase().includes(dailyDrawerSearch.toLowerCase()) ||
+                            (o.customerPhone && o.customerPhone.includes(dailyDrawerSearch));
+                          return matchesBranch && matchesSearch;
+                        });
 
-                            {dayOrders.length === 0 ? (
-                              <p style={{ margin: 0, fontSize: '12px', color: 'var(--text-muted)' }}>No individual orders recorded on this day.</p>
-                            ) : (
-                              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '8px' }}>
-                                {dayOrders.map(o => (
-                                  <div key={o.id} style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '10px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px' }}>
-                                    <div>
-                                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                        <strong style={{ color: 'var(--brand-primary)' }}>#{o.id}</strong>
-                                        <span className="badge badge-in-use" style={{ fontSize: '10px', padding: '2px 6px' }}>{o.branch}</span>
-                                      </div>
-                                      <div style={{ color: 'var(--text-secondary)', marginTop: '2px' }}>
-                                        {o.customerName} • {o.serviceName}
-                                      </div>
-                                    </div>
-                                    <div style={{ textAlign: 'right' }}>
-                                      <strong style={{ color: 'var(--success)', fontSize: '13px', display: 'block' }}>R{o.amount.toFixed(2)}</strong>
-                                      <span style={{ fontSize: '10.5px', color: o.paymentStatus.startsWith('Paid') ? '#047857' : '#b45309' }}>
-                                        {o.paymentStatus.startsWith('Paid') ? '✓ Paid' : 'Pending'}
+                        return (
+                          <tr style={{ background: '#f8fafc' }}>
+                            <td colSpan={9} style={{ padding: '16px 20px', borderBottom: '2px solid var(--border-color)' }}>
+                              <div style={{ background: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 2px 10px rgba(0,0,0,0.04)', overflow: 'hidden' }}>
+                                
+                                {/* Header Strip: Title, Breakdown Totals, Search */}
+                                <div style={{ padding: '12px 16px', background: '#f1f5f9', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+                                  <div>
+                                    <strong style={{ fontSize: '13.5px', color: 'var(--brand-primary)', display: 'block' }}>
+                                      {day.dayLabel} Orders Ledger ({dayOrders.length} total)
+                                    </strong>
+                                    <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                                      High-volume order breakdown with instant branch filtering
+                                    </span>
+                                  </div>
+
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap' }}>
+                                    <div style={{ display: 'flex', gap: '10px', fontSize: '12px' }}>
+                                      <span style={{ background: '#ecfdf5', color: '#047857', border: '1px solid #a7f3d0', padding: '3px 8px', borderRadius: '6px', fontWeight: 600 }}>
+                                        Counter POS: R{day.counterTotal.toFixed(2)}
+                                      </span>
+                                      <span style={{ background: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe', padding: '3px 8px', borderRadius: '6px', fontWeight: 600 }}>
+                                        EFT & PayShap: R{day.eftTotal.toFixed(2)}
                                       </span>
                                     </div>
+
+                                    <div style={{ position: 'relative' }}>
+                                      <Search size={14} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+                                      <input 
+                                        type="text"
+                                        placeholder="Search order #, customer..."
+                                        value={dailyDrawerSearch}
+                                        onChange={(e) => setDailyDrawerSearch(e.target.value)}
+                                        onClick={(e) => e.stopPropagation()}
+                                        style={{ fontSize: '12px', padding: '5px 10px 5px 30px', borderRadius: '6px', border: '1px solid #cbd5e1', width: '190px' }}
+                                      />
+                                    </div>
                                   </div>
-                                ))}
+                                </div>
+
+                                {/* Branch Filter Tabs */}
+                                <div style={{ padding: '8px 16px', background: '#ffffff', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                                  <span style={{ fontSize: '11.5px', fontWeight: 700, color: 'var(--text-secondary)', marginRight: '4px' }}>Filter Branch:</span>
+                                  <button
+                                    type="button"
+                                    onClick={(e) => { e.stopPropagation(); setDailyDrawerBranchFilter('All'); }}
+                                    style={{
+                                      fontSize: '11px',
+                                      padding: '3px 9px',
+                                      borderRadius: '12px',
+                                      border: '1px solid',
+                                      borderColor: dailyDrawerBranchFilter === 'All' ? 'var(--brand-primary)' : '#e2e8f0',
+                                      background: dailyDrawerBranchFilter === 'All' ? '#eff6ff' : '#ffffff',
+                                      color: dailyDrawerBranchFilter === 'All' ? 'var(--brand-primary)' : 'var(--text-secondary)',
+                                      fontWeight: dailyDrawerBranchFilter === 'All' ? 700 : 500,
+                                      cursor: 'pointer'
+                                    }}
+                                  >
+                                    All ({dayOrders.length})
+                                  </button>
+                                  {BRANCHES.map(branchInfo => {
+                                    const bName = branchInfo.name;
+                                    const bCount = dayOrders.filter(o => o.branch === bName).length;
+                                    if (bCount === 0) return null;
+                                    const isSel = dailyDrawerBranchFilter === bName;
+                                    return (
+                                      <button
+                                        key={bName}
+                                        type="button"
+                                        onClick={(e) => { e.stopPropagation(); setDailyDrawerBranchFilter(bName); }}
+                                        style={{
+                                          fontSize: '11px',
+                                          padding: '3px 9px',
+                                          borderRadius: '12px',
+                                          border: '1px solid',
+                                          borderColor: isSel ? 'var(--brand-primary)' : '#e2e8f0',
+                                          background: isSel ? '#eff6ff' : '#ffffff',
+                                          color: isSel ? 'var(--brand-primary)' : 'var(--text-secondary)',
+                                          fontWeight: isSel ? 700 : 500,
+                                          cursor: 'pointer'
+                                        }}
+                                      >
+                                        {bName} ({bCount})
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+
+                                {/* High-Density Scrollable Table (Comfortably holds 25+ orders without page stretch) */}
+                                <div style={{ maxHeight: '280px', overflowY: 'auto' }}>
+                                  {displayedDayOrders.length === 0 ? (
+                                    <div style={{ padding: '24px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '12.5px' }}>
+                                      {dayOrders.length === 0 ? 'No orders recorded on this day.' : 'No orders match this filter / search.'}
+                                    </div>
+                                  ) : (
+                                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
+                                      <thead style={{ position: 'sticky', top: 0, background: '#f8fafc', zIndex: 1, borderBottom: '1px solid #e2e8f0' }}>
+                                        <tr>
+                                          <th style={{ padding: '8px 12px', textAlign: 'left', fontWeight: 600, color: 'var(--text-secondary)' }}>Order #</th>
+                                          <th style={{ padding: '8px 10px', textAlign: 'left', fontWeight: 600, color: 'var(--text-secondary)' }}>Branch</th>
+                                          <th style={{ padding: '8px 12px', textAlign: 'left', fontWeight: 600, color: 'var(--text-secondary)' }}>Customer</th>
+                                          <th style={{ padding: '8px 12px', textAlign: 'left', fontWeight: 600, color: 'var(--text-secondary)' }}>Service & Load</th>
+                                          <th style={{ padding: '8px 12px', textAlign: 'left', fontWeight: 600, color: 'var(--text-secondary)' }}>Payment Channel</th>
+                                          <th style={{ padding: '8px 10px', textAlign: 'center', fontWeight: 600, color: 'var(--text-secondary)' }}>Status</th>
+                                          <th style={{ padding: '8px 14px', textAlign: 'right', fontWeight: 600, color: 'var(--text-secondary)' }}>Amount</th>
+                                          <th style={{ padding: '8px 12px', textAlign: 'center', fontWeight: 600, color: 'var(--text-secondary)' }}>Action</th>
+                                        </tr>
+                                      </thead>
+                                      <tbody>
+                                        {displayedDayOrders.map((o, idx) => {
+                                          const isPaidCounter = o.paymentMethod === 'Speed Point/Cash(Paid at Counter)' || o.paymentStatus === 'Paid (Counter)';
+                                          const isVerifiedEft = o.paymentStatus === 'Paid (EFT/PayShap Verified)';
+                                          const isPendingPop = o.paymentStatus === 'POP Uploaded (Pending Verification)';
+                                          const isRejected = o.paymentStatus.includes('Rejected');
+
+                                          return (
+                                            <tr key={o.id} style={{ borderBottom: '1px solid #f1f5f9', background: idx % 2 === 0 ? '#ffffff' : '#fcfcfd' }}>
+                                              <td style={{ padding: '8px 12px', fontWeight: 700, color: 'var(--brand-primary)' }}>
+                                                #{o.id}
+                                              </td>
+                                              <td style={{ padding: '8px 10px' }}>
+                                                <span className="badge badge-in-use" style={{ fontSize: '10px', padding: '2px 6px' }}>{o.branch}</span>
+                                              </td>
+                                              <td style={{ padding: '8px 12px', fontWeight: 600, color: 'var(--text-main)' }}>
+                                                {o.customerName} <span style={{ color: 'var(--text-muted)', fontSize: '10.5px', fontWeight: 400 }}>({o.customerPhone})</span>
+                                              </td>
+                                              <td style={{ padding: '8px 12px', color: 'var(--text-secondary)' }}>
+                                                {o.serviceName} • {o.weightOrQty} {o.unit}
+                                              </td>
+                                              <td style={{ padding: '8px 12px' }}>
+                                                <span style={{ fontSize: '11px', color: isPaidCounter ? '#047857' : '#1d4ed8', fontWeight: 600 }}>
+                                                  {isPaidCounter ? '💳 Speed Point / POS' : '📱 EFT / PayShap'}
+                                                </span>
+                                              </td>
+                                              <td style={{ padding: '8px 10px', textAlign: 'center' }}>
+                                                <span style={{
+                                                  fontSize: '10.5px',
+                                                  padding: '2px 7px',
+                                                  borderRadius: '10px',
+                                                  fontWeight: 600,
+                                                  background: isPaidCounter ? '#ecfdf5' : isVerifiedEft ? '#eff6ff' : isPendingPop ? '#fef3c7' : isRejected ? '#fee2e2' : '#f3f4f6',
+                                                  color: isPaidCounter ? '#047857' : isVerifiedEft ? '#1d4ed8' : isPendingPop ? '#b45309' : isRejected ? '#dc2626' : '#6b7280'
+                                                }}>
+                                                  {isPaidCounter ? '✓ Paid (Till)' : isVerifiedEft ? '✓ Verified EFT' : isPendingPop ? 'Pending POP' : isRejected ? 'Rejected' : 'Awaiting'}
+                                                </span>
+                                              </td>
+                                              <td style={{ padding: '8px 14px', textAlign: 'right', fontWeight: 700, color: 'var(--success)', fontSize: '12.5px' }}>
+                                                R{o.amount.toFixed(2)}
+                                              </td>
+                                              <td style={{ padding: '8px 12px', textAlign: 'center' }}>
+                                                {o.proofOfPayment?.fileData ? (
+                                                  <button
+                                                    type="button"
+                                                    className="btn btn-outline"
+                                                    style={{ minHeight: '26px', padding: '2px 8px', fontSize: '10.5px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                                                    onClick={(e) => { e.stopPropagation(); setSelectedPopOrder(o); }}
+                                                  >
+                                                    <Eye size={11} /> POP Slip
+                                                  </button>
+                                                ) : (
+                                                  <span style={{ color: 'var(--text-muted)', fontSize: '10px' }}>—</span>
+                                                )}
+                                              </td>
+                                            </tr>
+                                          );
+                                        })}
+                                      </tbody>
+                                    </table>
+                                  )}
+                                </div>
                               </div>
-                            )}
-                          </td>
-                        </tr>
-                      )}
+                            </td>
+                          </tr>
+                        );
+                      })()}
                     </React.Fragment>
                   );
                 })}
@@ -953,7 +1144,7 @@ export const AdminPortal: React.FC = () => {
         eftTotal={monthEftPayShapRevenue}
         ordersCount={monthOrders.length}
         branchBreakdown={branchBreakdownTotals}
-        onConfirmRollover={createMonthlyRollover}
+        onConfirmRollover={handleConfirmRollover}
       />
     </div>
   );
