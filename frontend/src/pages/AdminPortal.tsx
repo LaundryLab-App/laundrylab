@@ -643,7 +643,7 @@ export const AdminPortal: React.FC = () => {
                           <tr style={{ background: '#f8fafc' }}>
                             <td colSpan={9} style={{ padding: '16px 20px', borderBottom: '2px solid var(--border-color)' }}>
                               <div style={{ background: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 2px 10px rgba(0,0,0,0.04)', overflow: 'hidden' }}>
-
+                                
                                 {/* Header Strip: Title, Breakdown Totals, Search */}
                                 <div style={{ padding: '12px 16px', background: '#f1f5f9', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
                                   <div>
@@ -651,7 +651,7 @@ export const AdminPortal: React.FC = () => {
                                       {day.dayLabel} Orders Ledger ({dayOrders.length} total)
                                     </strong>
                                     <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-                                      Showing 5 orders at a time with instant branch filtering
+                                      High-volume order breakdown with instant branch filtering
                                     </span>
                                   </div>
 
@@ -667,13 +667,13 @@ export const AdminPortal: React.FC = () => {
 
                                     <div style={{ position: 'relative' }}>
                                       <Search size={14} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
-                                      <input
-                                        type="text"
-                                        placeholder="Search order #, customer..."
+                                      <input 
+                                        type="text" 
+                                        placeholder="Search order #, customer..." 
                                         value={dailyDrawerSearch}
-                                        onChange={(e) => {
-                                          setDailyDrawerSearch(e.target.value);
-                                          setDailyDrawerPage(1);
+                                        onChange={(e) => { 
+                                          setDailyDrawerSearch(e.target.value); 
+                                          setDailyDrawerPage(1); 
                                         }}
                                         onClick={(e) => e.stopPropagation()}
                                         style={{ fontSize: '12px', padding: '5px 10px 5px 30px', borderRadius: '6px', border: '1px solid #cbd5e1', width: '190px' }}
@@ -687,9 +687,9 @@ export const AdminPortal: React.FC = () => {
                                   <span style={{ fontSize: '11.5px', fontWeight: 700, color: 'var(--text-secondary)', marginRight: '4px' }}>Filter Branch:</span>
                                   <button
                                     type="button"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setDailyDrawerBranchFilter('All');
+                                    onClick={(e) => { 
+                                      e.stopPropagation(); 
+                                      setDailyDrawerBranchFilter('All'); 
                                       setDailyDrawerPage(1);
                                     }}
                                     style={{
@@ -715,9 +715,9 @@ export const AdminPortal: React.FC = () => {
                                       <button
                                         key={bName}
                                         type="button"
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          setDailyDrawerBranchFilter(bName);
+                                        onClick={(e) => { 
+                                          e.stopPropagation(); 
+                                          setDailyDrawerBranchFilter(bName); 
                                           setDailyDrawerPage(1);
                                         }}
                                         style={{
@@ -745,105 +745,72 @@ export const AdminPortal: React.FC = () => {
                                       {dayOrders.length === 0 ? 'No orders recorded on this day.' : 'No orders match this filter / search.'}
                                     </div>
                                   ) : (
-                                    <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '12.5px' }}>
-                                      <thead>
-                                        <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0', color: 'var(--text-muted)' }}>
-                                          <th style={{ padding: '10px 12px' }}>Order ID</th>
-                                          <th style={{ padding: '10px 12px' }}>Time</th>
-                                          <th style={{ padding: '10px 12px' }}>Branch</th>
-                                          <th style={{ padding: '10px 12px' }}>Customer / Ref</th>
-                                          <th style={{ padding: '10px 12px' }}>Service & Load</th>
-                                          <th style={{ padding: '10px 12px' }}>Payment Channel</th>
-                                          <th style={{ padding: '10px 12px' }}>Payment Status</th>
-                                          <th style={{ padding: '10px 12px' }}>Amount (ZAR)</th>
-                                          <th style={{ padding: '10px 12px' }}>Action</th>
+                                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
+                                      <thead style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
+                                        <tr>
+                                          <th style={{ padding: '9px 12px', textAlign: 'left', fontWeight: 600, color: 'var(--text-secondary)' }}>Order #</th>
+                                          <th style={{ padding: '9px 10px', textAlign: 'left', fontWeight: 600, color: 'var(--text-secondary)' }}>Branch</th>
+                                          <th style={{ padding: '9px 12px', textAlign: 'left', fontWeight: 600, color: 'var(--text-secondary)' }}>Customer</th>
+                                          <th style={{ padding: '9px 12px', textAlign: 'left', fontWeight: 600, color: 'var(--text-secondary)' }}>Service & Load</th>
+                                          <th style={{ padding: '9px 12px', textAlign: 'left', fontWeight: 600, color: 'var(--text-secondary)' }}>Payment Channel</th>
+                                          <th style={{ padding: '9px 10px', textAlign: 'center', fontWeight: 600, color: 'var(--text-secondary)' }}>Status</th>
+                                          <th style={{ padding: '9px 14px', textAlign: 'right', fontWeight: 600, color: 'var(--text-secondary)' }}>Amount</th>
+                                          <th style={{ padding: '9px 12px', textAlign: 'center', fontWeight: 600, color: 'var(--text-secondary)' }}>Action</th>
                                         </tr>
                                       </thead>
                                       <tbody>
-                                        {paginatedOrders.map((o) => {
-                                          const isPaid = o.paymentStatus.startsWith('Paid');
-                                          const isPaidCounter = o.paymentStatus === 'Paid (Counter)' || o.paymentMethod === 'Speed Point/Cash(Paid at Counter)';
-                                          const isPopPending = o.paymentStatus === 'POP Uploaded (Pending Verification)';
-                                          const isPopRejected = o.paymentStatus === 'POP Rejected (Re-upload Required)' || !!o.proofOfPayment?.rejected;
+                                        {paginatedOrders.map((o, idx) => {
+                                          const isPaidCounter = o.paymentMethod === 'Speed Point/Cash(Paid at Counter)' || o.paymentStatus === 'Paid (Counter)';
+                                          const isVerifiedEft = o.paymentStatus === 'Paid (EFT/PayShap Verified)';
+                                          const isPendingPop = o.paymentStatus === 'POP Uploaded (Pending Verification)';
+                                          const isRejected = o.paymentStatus.includes('Rejected');
 
                                           return (
-                                            <tr key={o.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                                              <td style={{ padding: '10px 12px', fontWeight: 700, color: 'var(--brand-accent)' }}>
+                                            <tr key={o.id} style={{ borderBottom: '1px solid #f1f5f9', background: idx % 2 === 0 ? '#ffffff' : '#fcfcfd' }}>
+                                              <td style={{ padding: '9px 12px', fontWeight: 700, color: 'var(--brand-primary)' }}>
                                                 #{o.id}
                                               </td>
-                                              <td style={{ padding: '10px 12px', color: 'var(--text-muted)', fontSize: '11.5px', fontWeight: 600 }}>
-                                                {o.timestamp}
+                                              <td style={{ padding: '9px 10px' }}>
+                                                <span className="badge badge-in-use" style={{ fontSize: '10px', padding: '2px 6px' }}>{o.branch}</span>
                                               </td>
-                                              <td style={{ padding: '10px 12px' }}>
-                                                <span className="badge badge-in-use" style={{ fontSize: '10.5px', padding: '2px 7px' }}>{o.branch}</span>
+                                              <td style={{ padding: '9px 12px', fontWeight: 600, color: 'var(--text-main)' }}>
+                                                {o.customerName} <span style={{ color: 'var(--text-muted)', fontSize: '10.5px', fontWeight: 400 }}>({o.customerPhone})</span>
                                               </td>
-                                              <td style={{ padding: '10px 12px' }}>
-                                                <strong style={{ color: 'var(--text-main)', display: 'block' }}>{o.customerName}</strong>
-                                                {o.unitNumber && <span style={{ color: 'var(--brand-accent)', fontSize: '11px', display: 'block' }}>🏢 {o.unitNumber}</span>}
-                                                <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{o.customerPhone}</span>
-                                              </td>
-                                              <td style={{ padding: '10px 12px', color: 'var(--text-secondary)' }}>
+                                              <td style={{ padding: '9px 12px', color: 'var(--text-secondary)' }}>
                                                 {o.serviceName} • {o.weightOrQty} {o.unit}
                                               </td>
-                                              <td style={{ padding: '10px 12px' }}>
-                                                <span style={{ fontSize: '11.5px', color: isPaidCounter ? '#047857' : '#1d4ed8', fontWeight: 600 }}>
+                                              <td style={{ padding: '9px 12px' }}>
+                                                <span style={{ fontSize: '11px', color: isPaidCounter ? '#047857' : '#1d4ed8', fontWeight: 600 }}>
                                                   {isPaidCounter ? '💳 Speed Point / POS' : '📱 EFT / PayShap'}
                                                 </span>
                                               </td>
-                                              <td style={{ padding: '10px 12px' }}>
-                                                {isPopRejected ? (
-                                                  <span className="badge" style={{ background: '#fee2e2', color: '#b91c1c', border: '1px solid #fca5a5', fontSize: '10.5px' }}>
-                                                    POP Rejected
-                                                  </span>
-                                                ) : (
-                                                  <span className={`badge ${isPaid ? 'badge-available' : isPopPending ? 'badge-in-use' : 'badge-completed'}`} style={{ fontSize: '10.5px' }}>
-                                                    {o.paymentStatus}
-                                                  </span>
-                                                )}
+                                              <td style={{ padding: '9px 10px', textAlign: 'center' }}>
+                                                <span style={{
+                                                  fontSize: '10.5px',
+                                                  padding: '2px 7px',
+                                                  borderRadius: '10px',
+                                                  fontWeight: 600,
+                                                  background: isPaidCounter ? '#ecfdf5' : isVerifiedEft ? '#eff6ff' : isPendingPop ? '#fef3c7' : isRejected ? '#fee2e2' : '#f3f4f6',
+                                                  color: isPaidCounter ? '#047857' : isVerifiedEft ? '#1d4ed8' : isPendingPop ? '#b45309' : isRejected ? '#dc2626' : '#6b7280'
+                                                }}>
+                                                  {isPaidCounter ? '✓ Paid (Till)' : isVerifiedEft ? '✓ Verified EFT' : isPendingPop ? 'Pending POP' : isRejected ? 'Rejected' : 'Awaiting'}
+                                                </span>
                                               </td>
-                                              <td style={{ padding: '10px 12px', fontWeight: 700, color: 'var(--success)', fontSize: '13px' }}>
+                                              <td style={{ padding: '9px 14px', textAlign: 'right', fontWeight: 700, color: 'var(--success)', fontSize: '12.5px' }}>
                                                 R{o.amount.toFixed(2)}
                                               </td>
-                                              <td style={{ padding: '10px 12px' }}>
-                                                {isPopPending ? (
-                                                  <button
-                                                    type="button"
-                                                    className="btn btn-primary"
-                                                    style={{ minHeight: '32px', padding: '4px 10px', fontSize: '11.5px', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '5px', borderRadius: '7px', whiteSpace: 'nowrap' }}
-                                                    onClick={(e) => { e.stopPropagation(); setSelectedPopOrder(o); }}
-                                                  >
-                                                    <ShieldCheck size={13} /> Review POP
-                                                  </button>
-                                                ) : isPopRejected ? (
+                                              <td style={{ padding: '9px 12px', textAlign: 'center' }}>
+                                                {o.proofOfPayment?.fileData ? (
                                                   <button
                                                     type="button"
                                                     className="btn btn-outline"
-                                                    style={{ minHeight: '32px', padding: '4px 10px', fontSize: '11.5px', fontWeight: 600, color: '#dc2626', borderColor: '#fca5a5', display: 'inline-flex', alignItems: 'center', gap: '5px', borderRadius: '7px', whiteSpace: 'nowrap' }}
+                                                    style={{ minHeight: '26px', padding: '2px 8px', fontSize: '10.5px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
                                                     onClick={(e) => { e.stopPropagation(); setSelectedPopOrder(o); }}
                                                   >
-                                                    <RotateCcw size={12} /> View Rejected POP
+                                                    <Eye size={11} /> POP Slip
                                                   </button>
-                                                ) : isPaidCounter ? (
-                                                  <span style={{ color: '#047857', fontSize: '11.5px', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                                                    <CheckCircle2 size={13} /> Settled at Till
-                                                  </span>
-                                                ) : o.paymentStatus === 'Paid (EFT/PayShap Verified)' && o.proofOfPayment?.fileData ? (
-                                                  <button
-                                                    type="button"
-                                                    className="btn btn-outline"
-                                                    style={{ minHeight: '32px', padding: '4px 10px', fontSize: '11.5px', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '5px', borderRadius: '7px', whiteSpace: 'nowrap' }}
-                                                    onClick={(e) => { e.stopPropagation(); setSelectedPopOrder(o); }}
-                                                  >
-                                                    <Eye size={12} /> View POP Slip
-                                                  </button>
-                                                ) : o.paymentStatus === 'Paid (EFT/PayShap Verified)' ? (
-                                                  <span style={{ color: '#047857', fontSize: '11.5px', fontWeight: 600 }}>
-                                                    ✓ Verified EFT
-                                                  </span>
                                                 ) : (
-                                                  <span style={{ color: 'var(--warning)', fontSize: '11.5px', fontWeight: 600 }}>
-                                                    Awaiting Customer POP
-                                                  </span>
+                                                  <span style={{ color: 'var(--text-muted)', fontSize: '10px' }}>—</span>
                                                 )}
                                               </td>
                                             </tr>
@@ -1095,37 +1062,47 @@ export const AdminPortal: React.FC = () => {
         const paginatedLedgerOrders = filteredOrders.slice(startLedgerIndex, startLedgerIndex + LEDGER_PAGE_SIZE);
 
         return (
-          <div className="glass-card" style={{ background: '#ffffff', borderRadius: '16px', border: '1px solid var(--border-color)', boxShadow: '0 4px 16px rgba(0,0,0,0.04)', padding: '20px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '14px' }}>
+          <div style={{ background: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 2px 10px rgba(0,0,0,0.04)', overflow: 'hidden' }}>
+            
+            {/* Header Strip: Title, Breakdown Totals, Search (Same design as Daily Breakdown Drawer) */}
+            <div style={{ padding: '12px 16px', background: '#f1f5f9', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
               <div>
-                <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: 0, fontSize: '18px' }}>
+                <strong style={{ fontSize: '13.5px', color: 'var(--brand-primary)', display: 'block' }}>
                   Multi-Branch Digital Audit Ledger ({selectedMonthName})
-                </h3>
-                <span style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px', display: 'block' }}>
-                  Showing {filteredOrders.length > 0 ? `${startLedgerIndex + 1}–${Math.min(startLedgerIndex + LEDGER_PAGE_SIZE, filteredOrders.length)} of ${filteredOrders.length}` : '0'} orders for {selectedMonthName} (5 items per page)
+                </strong>
+                <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                  High-volume order breakdown with instant branch filtering
                 </span>
               </div>
 
-              <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
-                <div style={{ position: 'relative', minWidth: '220px' }}>
-                  <Search size={15} style={{ position: 'absolute', left: '10px', top: '12px', color: 'var(--text-muted)' }} />
+              <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', gap: '10px', fontSize: '12px' }}>
+                  <span style={{ background: '#ecfdf5', color: '#047857', border: '1px solid #a7f3d0', padding: '3px 8px', borderRadius: '6px', fontWeight: 600 }}>
+                    Counter POS: R{monthPosRevenue.toFixed(2)}
+                  </span>
+                  <span style={{ background: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe', padding: '3px 8px', borderRadius: '6px', fontWeight: 600 }}>
+                    EFT & PayShap: R{monthEftPayShapRevenue.toFixed(2)}
+                  </span>
+                </div>
+
+                <div style={{ position: 'relative' }}>
+                  <Search size={14} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
                   <input
                     type="text"
-                    className="custom-input"
-                    placeholder="Search ledger..."
-                    style={{ paddingLeft: '32px', minHeight: '38px', fontSize: '13px' }}
+                    placeholder="Search order #, customer..."
                     value={ledgerSearch}
-                    onChange={e => {
+                    onChange={(e) => {
                       setLedgerSearch(e.target.value);
                       setLedgerPage(1);
                     }}
+                    style={{ fontSize: '12px', padding: '5px 10px 5px 30px', borderRadius: '6px', border: '1px solid #cbd5e1', width: '190px' }}
                   />
                 </div>
               </div>
             </div>
 
-            {/* Branch Filter Tabs matching the daily drawer */}
-            <div style={{ padding: '8px 0', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap', marginBottom: '14px' }}>
+            {/* Branch Filter Tabs */}
+            <div style={{ padding: '8px 16px', background: '#ffffff', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
               <span style={{ fontSize: '11.5px', fontWeight: 700, color: 'var(--text-secondary)', marginRight: '4px' }}>Filter Branch:</span>
               <button
                 type="button"
@@ -1135,7 +1112,7 @@ export const AdminPortal: React.FC = () => {
                 }}
                 style={{
                   fontSize: '11px',
-                  padding: '3px 10px',
+                  padding: '3px 9px',
                   borderRadius: '12px',
                   border: '1px solid',
                   borderColor: selectedBranchFilter === 'All' ? 'var(--brand-primary)' : '#e2e8f0',
@@ -1162,7 +1139,7 @@ export const AdminPortal: React.FC = () => {
                     }}
                     style={{
                       fontSize: '11px',
-                      padding: '3px 10px',
+                      padding: '3px 9px',
                       borderRadius: '12px',
                       border: '1px solid',
                       borderColor: isSel ? 'var(--brand-primary)' : '#e2e8f0',
@@ -1178,148 +1155,153 @@ export const AdminPortal: React.FC = () => {
               })}
             </div>
 
-            {/* Table with Payment Channel column */}
-            <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '13px' }}>
-                <thead>
-                  <tr style={{ borderBottom: '1px solid var(--border-color)', color: 'var(--text-muted)' }}>
-                    <th style={{ padding: '12px' }}>Order ID</th>
-                    <th style={{ padding: '12px' }}>Date / Time</th>
-                    <th style={{ padding: '12px' }}>Branch</th>
-                    <th style={{ padding: '12px' }}>Customer / Ref</th>
-                    <th style={{ padding: '12px' }}>Service & Load</th>
-                    <th style={{ padding: '12px' }}>Payment Channel</th>
-                    <th style={{ padding: '12px' }}>Payment Status</th>
-                    <th style={{ padding: '12px' }}>Amount (ZAR)</th>
-                    <th style={{ padding: '12px' }}>Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredOrders.length === 0 ? (
-                    <tr>
-                      <td colSpan={9} style={{ padding: '30px', textAlign: 'center', color: 'var(--text-muted)' }}>
-                        No orders match your filter for {selectedMonthName}.
-                      </td>
-                    </tr>
-                  ) : (
-                    paginatedLedgerOrders.map(o => {
-                      const isPaid = o.paymentStatus.startsWith('Paid');
-                      const isPaidCounter = o.paymentStatus === 'Paid (Counter)' || o.paymentMethod === 'Speed Point/Cash(Paid at Counter)';
-                      const isPopPending = o.paymentStatus === 'POP Uploaded (Pending Verification)';
-                      const isPopRejected = o.paymentStatus === 'POP Rejected (Re-upload Required)' || !!o.proofOfPayment?.rejected;
-                      const dateStr = o.createdAt ? o.createdAt.slice(0, 10) : '';
+            {/* Table with original columns & Daily Drawer table design */}
+            <div>
+              {filteredOrders.length === 0 ? (
+                <div style={{ padding: '24px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '12.5px' }}>
+                  No orders match your filter for {selectedMonthName}.
+                </div>
+              ) : (
+                <div style={{ overflowX: 'auto' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
+                    <thead style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
+                      <tr>
+                        <th style={{ padding: '9px 12px', textAlign: 'left', fontWeight: 600, color: 'var(--text-secondary)' }}>Order ID</th>
+                        <th style={{ padding: '9px 12px', textAlign: 'left', fontWeight: 600, color: 'var(--text-secondary)' }}>Date / Time</th>
+                        <th style={{ padding: '9px 10px', textAlign: 'left', fontWeight: 600, color: 'var(--text-secondary)' }}>Branch</th>
+                        <th style={{ padding: '9px 12px', textAlign: 'left', fontWeight: 600, color: 'var(--text-secondary)' }}>Customer / Ref</th>
+                        <th style={{ padding: '9px 12px', textAlign: 'left', fontWeight: 600, color: 'var(--text-secondary)' }}>Service</th>
+                        <th style={{ padding: '9px 10px', textAlign: 'left', fontWeight: 600, color: 'var(--text-secondary)' }}>Garments</th>
+                        <th style={{ padding: '9px 10px', textAlign: 'center', fontWeight: 600, color: 'var(--text-secondary)' }}>Payment Status</th>
+                        <th style={{ padding: '9px 14px', textAlign: 'right', fontWeight: 600, color: 'var(--text-secondary)' }}>Amount (ZAR)</th>
+                        <th style={{ padding: '9px 12px', textAlign: 'center', fontWeight: 600, color: 'var(--text-secondary)' }}>Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {paginatedLedgerOrders.map((o, idx) => {
+                        const isPaidCounter = o.paymentStatus === 'Paid (Counter)' || o.paymentMethod === 'Speed Point/Cash(Paid at Counter)';
+                        const isVerifiedEft = o.paymentStatus === 'Paid (EFT/PayShap Verified)';
+                        const isPopPending = o.paymentStatus === 'POP Uploaded (Pending Verification)';
+                        const isPopRejected = o.paymentStatus === 'POP Rejected (Re-upload Required)' || !!o.proofOfPayment?.rejected;
+                        const dateStr = o.createdAt ? o.createdAt.slice(0, 10) : '';
 
-                      return (
-                        <tr key={o.id} style={{ borderBottom: '1px solid rgba(0,0,0,0.05)' }}>
-                          <td style={{ padding: '12px', fontWeight: 700, color: 'var(--brand-accent)' }}>#{o.id}</td>
-                          <td style={{ padding: '12px', color: 'var(--text-muted)' }}>
-                            {dateStr && <span style={{ display: 'block', fontSize: '11px', fontWeight: 600 }}>{dateStr}</span>}
-                            {o.timestamp}
-                          </td>
-                          <td style={{ padding: '12px' }}>
-                            <span className="badge badge-in-use" style={{ fontSize: '11px', padding: '2px 7px' }}>{o.branch}</span>
-                          </td>
-                          <td style={{ padding: '12px' }}>
-                            <strong style={{ color: 'var(--text-main)' }}>{o.customerName}</strong>
-                            {o.unitNumber && <span style={{ color: 'var(--brand-accent)', fontSize: '11px', display: 'block' }}>🏢 {o.unitNumber}</span>}
-                            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{o.customerPhone}</span>
-                          </td>
-                          <td style={{ padding: '12px', color: 'var(--text-secondary)' }}>
-                            {o.serviceName} • {o.weightOrQty} {o.unit}
-                          </td>
-                          <td style={{ padding: '12px' }}>
-                            <span style={{ fontSize: '11.5px', color: isPaidCounter ? '#047857' : '#1d4ed8', fontWeight: 600 }}>
-                              {isPaidCounter ? '💳 Speed Point / POS' : '📱 EFT / PayShap'}
-                            </span>
-                          </td>
-                          <td style={{ padding: '12px' }}>
-                            {isPopRejected ? (
-                              <span className="badge" style={{ background: '#fee2e2', color: '#b91c1c', border: '1px solid #fca5a5' }}>
-                                POP Rejected
-                              </span>
-                            ) : (
-                              <span className={`badge ${isPaid ? 'badge-available' : isPopPending ? 'badge-in-use' : 'badge-completed'}`}>
+                        return (
+                          <tr key={o.id} style={{ borderBottom: '1px solid #f1f5f9', background: idx % 2 === 0 ? '#ffffff' : '#fcfcfd' }}>
+                            <td style={{ padding: '9px 12px', fontWeight: 700, color: 'var(--brand-primary)' }}>
+                              #{o.id}
+                            </td>
+                            <td style={{ padding: '9px 12px', color: 'var(--text-secondary)', fontSize: '11px' }}>
+                              {dateStr && <span style={{ display: 'block', fontSize: '10.5px', fontWeight: 600 }}>{dateStr}</span>}
+                              {o.timestamp}
+                            </td>
+                            <td style={{ padding: '9px 10px' }}>
+                              <span className="badge badge-in-use" style={{ fontSize: '10px', padding: '2px 6px' }}>{o.branch}</span>
+                            </td>
+                            <td style={{ padding: '9px 12px', fontWeight: 600, color: 'var(--text-main)' }}>
+                              {o.customerName}
+                              {o.unitNumber && <span style={{ color: 'var(--brand-accent)', fontSize: '10.5px', marginLeft: '5px' }}>🏢 {o.unitNumber}</span>}
+                              <span style={{ color: 'var(--text-muted)', fontSize: '10.5px', fontWeight: 400, marginLeft: '5px' }}>({o.customerPhone})</span>
+                            </td>
+                            <td style={{ padding: '9px 12px', color: 'var(--text-secondary)' }}>
+                              {o.serviceName} ({o.weightOrQty} {o.unit})
+                            </td>
+                            <td style={{ padding: '9px 10px', color: 'var(--text-secondary)' }}>
+                              {o.totalItemCount} items
+                            </td>
+                            <td style={{ padding: '9px 10px', textAlign: 'center' }}>
+                              <span style={{
+                                fontSize: '10.5px',
+                                padding: '2px 7px',
+                                borderRadius: '10px',
+                                fontWeight: 600,
+                                background: isPaidCounter ? '#ecfdf5' : isVerifiedEft ? '#eff6ff' : isPopPending ? '#fef3c7' : isPopRejected ? '#fee2e2' : '#f3f4f6',
+                                color: isPaidCounter ? '#047857' : isVerifiedEft ? '#1d4ed8' : isPopPending ? '#b45309' : isPopRejected ? '#dc2626' : '#6b7280'
+                              }}>
                                 {o.paymentStatus}
                               </span>
-                            )}
-                          </td>
-                          <td style={{ padding: '12px', fontWeight: 700, color: 'var(--success)' }}>R{o.amount.toFixed(2)}</td>
-                          <td style={{ padding: '12px' }}>
-                            {isPopPending ? (
-                              <button
-                                className="btn btn-primary"
-                                style={{ minHeight: '36px', padding: '6px 14px', fontSize: '12.5px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '6px', borderRadius: '8px', whiteSpace: 'nowrap' }}
-                                onClick={() => setSelectedPopOrder(o)}
-                              >
-                                <ShieldCheck size={14} /> Review POP
-                              </button>
-                            ) : isPopRejected ? (
-                              <button
-                                className="btn btn-outline"
-                                style={{ minHeight: '36px', padding: '6px 12px', fontSize: '12px', fontWeight: 600, color: '#dc2626', borderColor: '#fca5a5', display: 'flex', alignItems: 'center', gap: '6px', borderRadius: '8px', whiteSpace: 'nowrap' }}
-                                onClick={() => setSelectedPopOrder(o)}
-                              >
-                                <RotateCcw size={13} /> View Rejected POP
-                              </button>
-                            ) : isPaidCounter ? (
-                              <span style={{ color: '#047857', fontSize: '12px', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                                <CheckCircle2 size={13} /> Settled at Till
-                              </span>
-                            ) : o.paymentStatus === 'Paid (EFT/PayShap Verified)' && o.proofOfPayment?.fileData ? (
-                              <button
-                                className="btn btn-outline"
-                                style={{ minHeight: '36px', padding: '6px 12px', fontSize: '12.5px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px', borderRadius: '8px', whiteSpace: 'nowrap' }}
-                                onClick={() => setSelectedPopOrder(o)}
-                              >
-                                <Eye size={13} /> View POP Slip
-                              </button>
-                            ) : o.paymentStatus === 'Paid (EFT/PayShap Verified)' ? (
-                              <span style={{ color: '#047857', fontSize: '12px', fontWeight: 600 }}>
-                                ✓ Verified EFT
-                              </span>
-                            ) : (
-                              <span style={{ color: 'var(--warning)', fontSize: '12px', fontWeight: 600 }}>
-                                Awaiting Customer POP
-                              </span>
-                            )}
-                          </td>
-                        </tr>
-                      );
-                    })
-                  )}
-                </tbody>
-              </table>
+                            </td>
+                            <td style={{ padding: '9px 14px', textAlign: 'right', fontWeight: 700, color: 'var(--success)', fontSize: '12.5px' }}>
+                              R{o.amount.toFixed(2)}
+                            </td>
+                            <td style={{ padding: '9px 12px', textAlign: 'center' }}>
+                              {isPopPending ? (
+                                <button
+                                  type="button"
+                                  className="btn btn-primary"
+                                  style={{ minHeight: '26px', padding: '2px 8px', fontSize: '10.5px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                                  onClick={() => setSelectedPopOrder(o)}
+                                >
+                                  <ShieldCheck size={11} /> Review POP
+                                </button>
+                              ) : isPopRejected ? (
+                                <button
+                                  type="button"
+                                  className="btn btn-outline"
+                                  style={{ minHeight: '26px', padding: '2px 8px', fontSize: '10.5px', color: '#dc2626', borderColor: '#fca5a5', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                                  onClick={() => setSelectedPopOrder(o)}
+                                >
+                                  <RotateCcw size={11} /> Rejected POP
+                                </button>
+                              ) : isPaidCounter ? (
+                                <span style={{ color: '#047857', fontSize: '11px', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                                  <CheckCircle2 size={12} /> Settled at Till
+                                </span>
+                              ) : isVerifiedEft && o.proofOfPayment?.fileData ? (
+                                <button
+                                  type="button"
+                                  className="btn btn-outline"
+                                  style={{ minHeight: '26px', padding: '2px 8px', fontSize: '10.5px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                                  onClick={() => setSelectedPopOrder(o)}
+                                >
+                                  <Eye size={11} /> POP Slip
+                                </button>
+                              ) : isVerifiedEft ? (
+                                <span style={{ color: '#047857', fontSize: '11px', fontWeight: 600 }}>
+                                  ✓ Verified EFT
+                                </span>
+                              ) : (
+                                <span style={{ color: 'var(--warning)', fontSize: '11px', fontWeight: 600 }}>
+                                  Awaiting Customer POP
+                                </span>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
 
-            {/* Pagination Controls (Showing 5 items at a time) */}
+            {/* Pagination Controls (Same design as Daily Breakdown Drawer) */}
             {filteredOrders.length > 0 && (
-              <div style={{ padding: '14px 16px', background: '#f8fafc', borderTop: '1px solid var(--border-color)', borderRadius: '0 0 12px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px', marginTop: '12px' }}>
-                <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-                  Showing <strong>{startLedgerIndex + 1}–{Math.min(startLedgerIndex + LEDGER_PAGE_SIZE, filteredOrders.length)}</strong> of <strong>{filteredOrders.length}</strong> orders (5 per page)
+              <div style={{ padding: '10px 16px', background: '#f8fafc', borderTop: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+                <div style={{ fontSize: '11.5px', color: 'var(--text-secondary)' }}>
+                  Showing <strong>{startLedgerIndex + 1}–{Math.min(startLedgerIndex + LEDGER_PAGE_SIZE, filteredOrders.length)}</strong> of <strong>{filteredOrders.length}</strong> orders (5 items per page)
                 </div>
 
                 {totalLedgerPages > 1 && (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <button
                       type="button"
                       disabled={currentLedgerPage <= 1}
                       onClick={() => setLedgerPage(prev => Math.max(1, prev - 1))}
                       style={{
-                        padding: '6px 12px',
-                        fontSize: '12px',
+                        padding: '4px 10px',
+                        fontSize: '11.5px',
                         fontWeight: 600,
-                        borderRadius: '8px',
+                        borderRadius: '6px',
                         border: '1px solid #cbd5e1',
                         background: currentLedgerPage <= 1 ? '#f1f5f9' : '#ffffff',
                         color: currentLedgerPage <= 1 ? '#94a3b8' : 'var(--text-main)',
-                        cursor: currentLedgerPage <= 1 ? 'not-allowed' : 'pointer',
-                        transition: 'all 0.15s ease'
+                        cursor: currentLedgerPage <= 1 ? 'not-allowed' : 'pointer'
                       }}
                     >
                       Previous
                     </button>
 
-                    <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', padding: '0 6px' }}>
+                    <span style={{ fontSize: '11.5px', fontWeight: 600, color: 'var(--text-secondary)', padding: '0 6px' }}>
                       Page {currentLedgerPage} of {totalLedgerPages}
                     </span>
 
@@ -1328,15 +1310,14 @@ export const AdminPortal: React.FC = () => {
                       disabled={currentLedgerPage >= totalLedgerPages}
                       onClick={() => setLedgerPage(prev => Math.min(totalLedgerPages, prev + 1))}
                       style={{
-                        padding: '6px 12px',
-                        fontSize: '12px',
+                        padding: '4px 10px',
+                        fontSize: '11.5px',
                         fontWeight: 600,
-                        borderRadius: '8px',
+                        borderRadius: '6px',
                         border: '1px solid #cbd5e1',
                         background: currentLedgerPage >= totalLedgerPages ? '#f1f5f9' : '#ffffff',
                         color: currentLedgerPage >= totalLedgerPages ? '#94a3b8' : 'var(--text-main)',
-                        cursor: currentLedgerPage >= totalLedgerPages ? 'not-allowed' : 'pointer',
-                        transition: 'all 0.15s ease'
+                        cursor: currentLedgerPage >= totalLedgerPages ? 'not-allowed' : 'pointer'
                       }}
                     >
                       Next
