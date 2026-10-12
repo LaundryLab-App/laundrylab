@@ -639,214 +639,213 @@ export const AdminPortal: React.FC = () => {
 
                         return (
                           <tr style={{ background: '#f8fafc' }}>
-                            <td colSpan={9} style={{ padding: '16px 20px', borderBottom: '2px solid var(--border-color)' }}>
-                              <div style={{ background: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 2px 10px rgba(0,0,0,0.04)', overflow: 'hidden' }}>
+                            <td colSpan={9} style={{ padding: '20px 24px', borderBottom: '2px solid var(--border-color)' }}>
+                              <div className="glass-card" style={{ background: '#ffffff', borderRadius: '16px', border: '1px solid var(--border-color)', boxShadow: '0 4px 16px rgba(0,0,0,0.05)', padding: '20px' }}>
                                 
-                                {/* Header Strip: Title, Breakdown Totals, Search */}
-                                <div style={{ padding: '12px 16px', background: '#f1f5f9', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+                                {/* Top Header matching the other table */}
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '14px' }}>
                                   <div>
-                                    <strong style={{ fontSize: '13.5px', color: 'var(--brand-primary)', display: 'block' }}>
-                                      {day.dayLabel} Orders Ledger ({dayOrders.length} total)
-                                    </strong>
-                                    <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-                                      Showing 5 orders at a time with instant branch filtering
+                                    <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: 0, fontSize: '16px', color: 'var(--text-main)' }}>
+                                      Daily Digital Audit Ledger ({day.dayLabel})
+                                    </h3>
+                                    <span style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px', display: 'block' }}>
+                                      Showing {displayedDayOrders.length > 0 ? `${startIndex + 1}–${Math.min(startIndex + DAILY_PAGE_SIZE, displayedDayOrders.length)} of ${displayedDayOrders.length}` : '0'} orders for {day.dayLabel} • Total: R{day.totalDayRevenue.toFixed(2)}
                                     </span>
                                   </div>
 
-                                  <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap' }}>
-                                    <div style={{ display: 'flex', gap: '10px', fontSize: '12px' }}>
-                                      <span style={{ background: '#ecfdf5', color: '#047857', border: '1px solid #a7f3d0', padding: '3px 8px', borderRadius: '6px', fontWeight: 600 }}>
-                                        Counter POS: R{day.counterTotal.toFixed(2)}
+                                  <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+                                    <div style={{ display: 'flex', gap: '8px', fontSize: '12px' }}>
+                                      <span style={{ background: '#ecfdf5', color: '#047857', border: '1px solid #a7f3d0', padding: '6px 12px', borderRadius: '8px', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
+                                        <CreditCard size={13} /> Till: R{day.counterTotal.toFixed(2)}
                                       </span>
-                                      <span style={{ background: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe', padding: '3px 8px', borderRadius: '6px', fontWeight: 600 }}>
-                                        EFT & PayShap: R{day.eftTotal.toFixed(2)}
+                                      <span style={{ background: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe', padding: '6px 12px', borderRadius: '8px', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
+                                        <Smartphone size={13} /> EFT: R{day.eftTotal.toFixed(2)}
                                       </span>
                                     </div>
 
-                                    <div style={{ position: 'relative' }}>
-                                      <Search size={14} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+                                    <select 
+                                      className="custom-select" 
+                                      style={{ width: 'auto', minHeight: '38px', fontSize: '13px' }}
+                                      value={dailyDrawerBranchFilter}
+                                      onChange={(e) => {
+                                        setDailyDrawerBranchFilter(e.target.value);
+                                        setDailyDrawerPage(1);
+                                      }}
+                                      onClick={(e) => e.stopPropagation()}
+                                    >
+                                      <option value="All">All 6 Branches ({dayOrders.length})</option>
+                                      {BRANCHES.map(b => {
+                                        const bCount = dayOrders.filter(o => o.branch === b.name).length;
+                                        return (
+                                          <option key={b.name} value={b.name}>
+                                            {b.name} {bCount > 0 ? `(${bCount})` : ''}
+                                          </option>
+                                        );
+                                      })}
+                                    </select>
+
+                                    <div style={{ position: 'relative', minWidth: '200px' }}>
+                                      <Search size={15} style={{ position: 'absolute', left: '10px', top: '12px', color: 'var(--text-muted)' }} />
                                       <input 
-                                        type="text"
-                                        placeholder="Search order #, customer..."
+                                        type="text" 
+                                        className="custom-input" 
+                                        placeholder="Search ledger..." 
+                                        style={{ paddingLeft: '32px', minHeight: '38px', fontSize: '13px' }}
                                         value={dailyDrawerSearch}
                                         onChange={(e) => {
                                           setDailyDrawerSearch(e.target.value);
                                           setDailyDrawerPage(1);
                                         }}
                                         onClick={(e) => e.stopPropagation()}
-                                        style={{ fontSize: '12px', padding: '5px 10px 5px 30px', borderRadius: '6px', border: '1px solid #cbd5e1', width: '190px' }}
                                       />
                                     </div>
                                   </div>
                                 </div>
 
-                                {/* Branch Filter Tabs */}
-                                <div style={{ padding: '8px 16px', background: '#ffffff', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
-                                  <span style={{ fontSize: '11.5px', fontWeight: 700, color: 'var(--text-secondary)', marginRight: '4px' }}>Filter Branch:</span>
-                                  <button
-                                    type="button"
-                                    onClick={(e) => { 
-                                      e.stopPropagation(); 
-                                      setDailyDrawerBranchFilter('All'); 
-                                      setDailyDrawerPage(1);
-                                    }}
-                                    style={{
-                                      fontSize: '11px',
-                                      padding: '3px 9px',
-                                      borderRadius: '12px',
-                                      border: '1px solid',
-                                      borderColor: dailyDrawerBranchFilter === 'All' ? 'var(--brand-primary)' : '#e2e8f0',
-                                      background: dailyDrawerBranchFilter === 'All' ? '#eff6ff' : '#ffffff',
-                                      color: dailyDrawerBranchFilter === 'All' ? 'var(--brand-primary)' : 'var(--text-secondary)',
-                                      fontWeight: dailyDrawerBranchFilter === 'All' ? 700 : 500,
-                                      cursor: 'pointer'
-                                    }}
-                                  >
-                                    All ({dayOrders.length})
-                                  </button>
-                                  {BRANCHES.map(branchInfo => {
-                                    const bName = branchInfo.name;
-                                    const bCount = dayOrders.filter(o => o.branch === bName).length;
-                                    if (bCount === 0) return null;
-                                    const isSel = dailyDrawerBranchFilter === bName;
-                                    return (
-                                      <button
-                                        key={bName}
-                                        type="button"
-                                        onClick={(e) => { 
-                                          e.stopPropagation(); 
-                                          setDailyDrawerBranchFilter(bName); 
-                                          setDailyDrawerPage(1);
-                                        }}
-                                        style={{
-                                          fontSize: '11px',
-                                          padding: '3px 9px',
-                                          borderRadius: '12px',
-                                          border: '1px solid',
-                                          borderColor: isSel ? 'var(--brand-primary)' : '#e2e8f0',
-                                          background: isSel ? '#eff6ff' : '#ffffff',
-                                          color: isSel ? 'var(--brand-primary)' : 'var(--text-secondary)',
-                                          fontWeight: isSel ? 700 : 500,
-                                          cursor: 'pointer'
-                                        }}
-                                      >
-                                        {bName} ({bCount})
-                                      </button>
-                                    );
-                                  })}
-                                </div>
-
-                                {/* Compact Table */}
-                                <div>
-                                  {displayedDayOrders.length === 0 ? (
-                                    <div style={{ padding: '24px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '12.5px' }}>
-                                      {dayOrders.length === 0 ? 'No orders recorded on this day.' : 'No orders match this filter / search.'}
-                                    </div>
-                                  ) : (
-                                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
-                                      <thead style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
+                                {/* Table with identical column layout and styling */}
+                                <div style={{ overflowX: 'auto' }}>
+                                  <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '13px' }}>
+                                    <thead>
+                                      <tr style={{ borderBottom: '1px solid var(--border-color)', color: 'var(--text-muted)' }}>
+                                        <th style={{ padding: '12px' }}>Order ID</th>
+                                        <th style={{ padding: '12px' }}>Date / Time</th>
+                                        <th style={{ padding: '12px' }}>Branch</th>
+                                        <th style={{ padding: '12px' }}>Customer / Ref</th>
+                                        <th style={{ padding: '12px' }}>Service</th>
+                                        <th style={{ padding: '12px' }}>Garments</th>
+                                        <th style={{ padding: '12px' }}>Payment Status</th>
+                                        <th style={{ padding: '12px' }}>Amount (ZAR)</th>
+                                        <th style={{ padding: '12px' }}>Action</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      {displayedDayOrders.length === 0 ? (
                                         <tr>
-                                          <th style={{ padding: '9px 12px', textAlign: 'left', fontWeight: 600, color: 'var(--text-secondary)' }}>Order #</th>
-                                          <th style={{ padding: '9px 10px', textAlign: 'left', fontWeight: 600, color: 'var(--text-secondary)' }}>Branch</th>
-                                          <th style={{ padding: '9px 12px', textAlign: 'left', fontWeight: 600, color: 'var(--text-secondary)' }}>Customer</th>
-                                          <th style={{ padding: '9px 12px', textAlign: 'left', fontWeight: 600, color: 'var(--text-secondary)' }}>Service & Load</th>
-                                          <th style={{ padding: '9px 12px', textAlign: 'left', fontWeight: 600, color: 'var(--text-secondary)' }}>Payment Channel</th>
-                                          <th style={{ padding: '9px 10px', textAlign: 'center', fontWeight: 600, color: 'var(--text-secondary)' }}>Status</th>
-                                          <th style={{ padding: '9px 14px', textAlign: 'right', fontWeight: 600, color: 'var(--text-secondary)' }}>Amount</th>
-                                          <th style={{ padding: '9px 12px', textAlign: 'center', fontWeight: 600, color: 'var(--text-secondary)' }}>Action</th>
+                                          <td colSpan={9} style={{ padding: '30px', textAlign: 'center', color: 'var(--text-muted)' }}>
+                                            No orders match your filter for {day.dayLabel}.
+                                          </td>
                                         </tr>
-                                      </thead>
-                                      <tbody>
-                                        {paginatedOrders.map((o, idx) => {
-                                          const isPaidCounter = o.paymentMethod === 'Speed Point/Cash(Paid at Counter)' || o.paymentStatus === 'Paid (Counter)';
-                                          const isVerifiedEft = o.paymentStatus === 'Paid (EFT/PayShap Verified)';
-                                          const isPendingPop = o.paymentStatus === 'POP Uploaded (Pending Verification)';
-                                          const isRejected = o.paymentStatus.includes('Rejected');
+                                      ) : (
+                                        paginatedOrders.map(o => {
+                                          const isPaid = o.paymentStatus.startsWith('Paid');
+                                          const isPaidCounter = o.paymentStatus === 'Paid (Counter)' || o.paymentMethod === 'Speed Point/Cash(Paid at Counter)';
+                                          const isPopPending = o.paymentStatus === 'POP Uploaded (Pending Verification)';
+                                          const isPopRejected = o.paymentStatus === 'POP Rejected (Re-upload Required)' || !!o.proofOfPayment?.rejected;
+                                          const dateStr = o.createdAt ? o.createdAt.slice(0, 10) : '';
 
                                           return (
-                                            <tr key={o.id} style={{ borderBottom: '1px solid #f1f5f9', background: idx % 2 === 0 ? '#ffffff' : '#fcfcfd' }}>
-                                              <td style={{ padding: '9px 12px', fontWeight: 700, color: 'var(--brand-primary)' }}>
+                                            <tr key={o.id} style={{ borderBottom: '1px solid rgba(0,0,0,0.05)', transition: 'background 0.15s' }}>
+                                              <td style={{ padding: '12px', fontWeight: 700, color: 'var(--brand-accent)' }}>
                                                 #{o.id}
                                               </td>
-                                              <td style={{ padding: '9px 10px' }}>
-                                                <span className="badge badge-in-use" style={{ fontSize: '10px', padding: '2px 6px' }}>{o.branch}</span>
+                                              <td style={{ padding: '12px', color: 'var(--text-muted)' }}>
+                                                {dateStr && <span style={{ display: 'block', fontSize: '11px', fontWeight: 600 }}>{dateStr}</span>}
+                                                {o.timestamp}
                                               </td>
-                                              <td style={{ padding: '9px 12px', fontWeight: 600, color: 'var(--text-main)' }}>
-                                                {o.customerName} <span style={{ color: 'var(--text-muted)', fontSize: '10.5px', fontWeight: 400 }}>({o.customerPhone})</span>
+                                              <td style={{ padding: '12px', color: 'var(--text-main)', fontWeight: 500 }}>
+                                                {o.branch}
                                               </td>
-                                              <td style={{ padding: '9px 12px', color: 'var(--text-secondary)' }}>
-                                                {o.serviceName} • {o.weightOrQty} {o.unit}
+                                              <td style={{ padding: '12px' }}>
+                                                <strong style={{ color: 'var(--text-main)' }}>{o.customerName}</strong>
+                                                {o.unitNumber && <span style={{ color: 'var(--brand-accent)', fontSize: '11px', display: 'block' }}>🏢 {o.unitNumber}</span>}
+                                                <span style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'block' }}>{o.customerPhone}</span>
                                               </td>
-                                              <td style={{ padding: '9px 12px' }}>
-                                                <span style={{ fontSize: '11px', color: isPaidCounter ? '#047857' : '#1d4ed8', fontWeight: 600 }}>
-                                                  {isPaidCounter ? '💳 Speed Point / POS' : '📱 EFT / PayShap'}
-                                                </span>
+                                              <td style={{ padding: '12px', color: 'var(--text-secondary)' }}>
+                                                {o.serviceName} ({o.weightOrQty} {o.unit})
                                               </td>
-                                              <td style={{ padding: '9px 10px', textAlign: 'center' }}>
-                                                <span style={{
-                                                  fontSize: '10.5px',
-                                                  padding: '2px 7px',
-                                                  borderRadius: '10px',
-                                                  fontWeight: 600,
-                                                  background: isPaidCounter ? '#ecfdf5' : isVerifiedEft ? '#eff6ff' : isPendingPop ? '#fef3c7' : isRejected ? '#fee2e2' : '#f3f4f6',
-                                                  color: isPaidCounter ? '#047857' : isVerifiedEft ? '#1d4ed8' : isPendingPop ? '#b45309' : isRejected ? '#dc2626' : '#6b7280'
-                                                }}>
-                                                  {isPaidCounter ? '✓ Paid (Till)' : isVerifiedEft ? '✓ Verified EFT' : isPendingPop ? 'Pending POP' : isRejected ? 'Rejected' : 'Awaiting'}
-                                                </span>
+                                              <td style={{ padding: '12px', color: 'var(--text-muted)' }}>
+                                                {o.totalItemCount} items
                                               </td>
-                                              <td style={{ padding: '9px 14px', textAlign: 'right', fontWeight: 700, color: 'var(--success)', fontSize: '12.5px' }}>
+                                              <td style={{ padding: '12px' }}>
+                                                {isPopRejected ? (
+                                                  <span className="badge" style={{ background: '#fee2e2', color: '#b91c1c', border: '1px solid #fca5a5' }}>
+                                                    POP Rejected
+                                                  </span>
+                                                ) : (
+                                                  <span className={`badge ${isPaid ? 'badge-available' : isPopPending ? 'badge-in-use' : 'badge-completed'}`}>
+                                                    {o.paymentStatus}
+                                                  </span>
+                                                )}
+                                              </td>
+                                              <td style={{ padding: '12px', fontWeight: 700, color: 'var(--success)' }}>
                                                 R{o.amount.toFixed(2)}
                                               </td>
-                                              <td style={{ padding: '9px 12px', textAlign: 'center' }}>
-                                                {o.proofOfPayment?.fileData ? (
-                                                  <button
-                                                    type="button"
-                                                    className="btn btn-outline"
-                                                    style={{ minHeight: '26px', padding: '2px 8px', fontSize: '10.5px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
-                                                    onClick={(e) => { e.stopPropagation(); setSelectedPopOrder(o); }}
+                                              <td style={{ padding: '12px' }}>
+                                                {isPopPending ? (
+                                                  <button 
+                                                    className="btn btn-primary"
+                                                    style={{ minHeight: '36px', padding: '6px 14px', fontSize: '12.5px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '6px', borderRadius: '8px', whiteSpace: 'nowrap' }}
+                                                    onClick={() => setSelectedPopOrder(o)}
                                                   >
-                                                    <Eye size={11} /> POP Slip
+                                                    <ShieldCheck size={14} /> Review POP
                                                   </button>
+                                                ) : isPopRejected ? (
+                                                  <button 
+                                                    className="btn btn-outline"
+                                                    style={{ minHeight: '36px', padding: '6px 12px', fontSize: '12px', fontWeight: 600, color: '#dc2626', borderColor: '#fca5a5', display: 'flex', alignItems: 'center', gap: '6px', borderRadius: '8px', whiteSpace: 'nowrap' }}
+                                                    onClick={() => setSelectedPopOrder(o)}
+                                                  >
+                                                    <RotateCcw size={13} /> View Rejected POP
+                                                  </button>
+                                                ) : isPaidCounter ? (
+                                                  <span style={{ color: '#047857', fontSize: '12px', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                                                    <CheckCircle2 size={13} /> Settled at Till
+                                                  </span>
+                                                ) : o.paymentStatus === 'Paid (EFT/PayShap Verified)' && o.proofOfPayment?.fileData ? (
+                                                  <button 
+                                                    className="btn btn-outline"
+                                                    style={{ minHeight: '36px', padding: '6px 12px', fontSize: '12.5px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px', borderRadius: '8px', whiteSpace: 'nowrap' }}
+                                                    onClick={() => setSelectedPopOrder(o)}
+                                                  >
+                                                    <Eye size={13} /> View POP Slip
+                                                  </button>
+                                                ) : o.paymentStatus === 'Paid (EFT/PayShap Verified)' ? (
+                                                  <span style={{ color: '#047857', fontSize: '12px', fontWeight: 600 }}>
+                                                    ✓ Verified EFT
+                                                  </span>
                                                 ) : (
-                                                  <span style={{ color: 'var(--text-muted)', fontSize: '10px' }}>—</span>
+                                                  <span style={{ color: 'var(--warning)', fontSize: '12px', fontWeight: 600 }}>
+                                                    Awaiting Customer POP
+                                                  </span>
                                                 )}
                                               </td>
                                             </tr>
                                           );
-                                        })}
-                                      </tbody>
-                                    </table>
-                                  )}
+                                        })
+                                      )}
+                                    </tbody>
+                                  </table>
                                 </div>
 
                                 {/* Pagination Controls (Showing 5 items at a time) */}
                                 {displayedDayOrders.length > 0 && (
-                                  <div style={{ padding: '10px 16px', background: '#f8fafc', borderTop: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
-                                    <div style={{ fontSize: '11.5px', color: 'var(--text-secondary)' }}>
-                                      Showing <strong>{startIndex + 1}–{Math.min(startIndex + DAILY_PAGE_SIZE, displayedDayOrders.length)}</strong> of <strong>{displayedDayOrders.length}</strong> orders (5 items per page)
+                                  <div style={{ padding: '14px 16px', background: '#f8fafc', borderTop: '1px solid var(--border-color)', borderRadius: '0 0 12px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px', marginTop: '8px' }}>
+                                    <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+                                      Showing <strong>{startIndex + 1}–{Math.min(startIndex + DAILY_PAGE_SIZE, displayedDayOrders.length)}</strong> of <strong>{displayedDayOrders.length}</strong> orders (5 per page)
                                     </div>
 
                                     {totalPages > 1 && (
-                                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                         <button
                                           type="button"
                                           disabled={currentPage <= 1}
                                           onClick={(e) => { e.stopPropagation(); setDailyDrawerPage(prev => Math.max(1, prev - 1)); }}
                                           style={{
-                                            padding: '4px 10px',
-                                            fontSize: '11.5px',
+                                            padding: '6px 12px',
+                                            fontSize: '12px',
                                             fontWeight: 600,
-                                            borderRadius: '6px',
+                                            borderRadius: '8px',
                                             border: '1px solid #cbd5e1',
                                             background: currentPage <= 1 ? '#f1f5f9' : '#ffffff',
                                             color: currentPage <= 1 ? '#94a3b8' : 'var(--text-main)',
-                                            cursor: currentPage <= 1 ? 'not-allowed' : 'pointer'
+                                            cursor: currentPage <= 1 ? 'not-allowed' : 'pointer',
+                                            transition: 'all 0.15s ease'
                                           }}
                                         >
                                           Previous
                                         </button>
 
-                                        <span style={{ fontSize: '11.5px', fontWeight: 600, color: 'var(--text-secondary)', padding: '0 6px' }}>
+                                        <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', padding: '0 6px' }}>
                                           Page {currentPage} of {totalPages}
                                         </span>
 
@@ -855,14 +854,15 @@ export const AdminPortal: React.FC = () => {
                                           disabled={currentPage >= totalPages}
                                           onClick={(e) => { e.stopPropagation(); setDailyDrawerPage(prev => Math.min(totalPages, prev + 1)); }}
                                           style={{
-                                            padding: '4px 10px',
-                                            fontSize: '11.5px',
+                                            padding: '6px 12px',
+                                            fontSize: '12px',
                                             fontWeight: 600,
-                                            borderRadius: '6px',
+                                            borderRadius: '8px',
                                             border: '1px solid #cbd5e1',
                                             background: currentPage >= totalPages ? '#f1f5f9' : '#ffffff',
                                             color: currentPage >= totalPages ? '#94a3b8' : 'var(--text-main)',
-                                            cursor: currentPage >= totalPages ? 'not-allowed' : 'pointer'
+                                            cursor: currentPage >= totalPages ? 'not-allowed' : 'pointer',
+                                            transition: 'all 0.15s ease'
                                           }}
                                         >
                                           Next
